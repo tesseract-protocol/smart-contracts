@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
 import "./../src/interfaces/ISwapData.sol";
-import "./../src/Initiator.sol";
+import "./../src/Cell.sol";
 
 // forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
 
@@ -19,17 +19,17 @@ contract WavaxToUsdcSwap is Script {
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
     IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant EXECUTOR = 0x5B870cbe9506Db7139B0e7d408280Ba21d9E5B5a;
-    address constant INITIATOR = 0xCC6590648FAf66c56a2fF653ce528AC355Bb4ad0;
+    address constant CELL_DESTINATION_CHAIN = 0xEfa9dfd52cfcD616cAFC8339a7F06E96f4dbC4F5;
+    address constant CELL_SOURCE_CHAIN = 0x245C3E01B90CFB2246B5B854AdC91a52a1aA587c;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        string memory fuji_rpc = vm.envString("FUJI_RPC_URL");
+        string memory fujiRpc = vm.envString("FUJI_RPC_URL");
 
         uint256 tesForkId = vm.activeFork();
-        uint256 fujiForkId = vm.createFork(fuji_rpc);
+        uint256 fujiForkId = vm.createFork(fujiRpc);
         vm.selectFork(fujiForkId);
         FormattedOffer memory offer = ROUTER.findBestPath(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, 2);
         console.log(offer.amounts[offer.amounts.length - 1]);
@@ -41,19 +41,36 @@ contract WavaxToUsdcSwap is Script {
             adapters: offer.adapters
         });
 
-        BridgePath[] memory bridgePaths = new BridgePath[](2);
-        bridgePaths[0] =
-            BridgePath({from: WAVAX_TES_REMOTE, to: WAVAX_HOME_FUJI, destinationBlockchainId: FUJI_BLOCKCHAIN_ID});
-        bridgePaths[1] =
-            BridgePath({from: USDC_FUJI_HOME, to: USDC_TES_REMOTE, destinationBlockchainId: TES_BLOCKCHAIN_ID});
-
-        SwapData memory swapData = SwapData({
-            receiver: vm.addr(privateKey),
-            executor: EXECUTOR,
-            gasLimit: 2_000_000,
-            trade: trade,
-            bridgePath: bridgePaths
+        Hop[] memory hops = new Hop[](2);
+        hops[0] = Hop({
+            action: Action.HopAndCall,
+            tokenIn: WAVAX_TES_REMOTE,
+            amountIn: SWAP_AMOUNT_IN,
+            gasLimit: 2_500_000,
+            trade: Trade(0, 0, new address[](0), new address[](0)),
+            bridgePath: BridgePath({
+                bridgeSourceChain: WAVAX_TES_REMOTE,
+                bridgeDestinationChain: WAVAX_HOME_FUJI,
+                cellDestinationChain: CELL_DESTINATION_CHAIN,
+                destinationBlockchainId: FUJI_BLOCKCHAIN_ID
+            })
         });
+        hops[1] = Hop({
+            action: Action.SwapAndHop,
+            tokenIn: WAVAX_FUJI,
+            amountIn: SWAP_AMOUNT_IN,
+            gasLimit: 0,
+            trade: trade,
+            bridgePath: BridgePath({
+                bridgeSourceChain: USDC_FUJI_HOME,
+                bridgeDestinationChain: USDC_TES_REMOTE,
+                cellDestinationChain: address(0),
+                destinationBlockchainId: TES_BLOCKCHAIN_ID
+            })
+        });
+
+        Instructions memory instructions = Instructions({receiver: vm.addr(privateKey), hops: hops});
+
         //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
 
         vm.selectFork(tesForkId);
@@ -62,8 +79,8 @@ contract WavaxToUsdcSwap is Script {
 
         vm.startBroadcast(privateKey);
 
-        IERC20(WAVAX_TES_REMOTE).approve(INITIATOR, SWAP_AMOUNT_IN);
-        Initiator(INITIATOR).crossChainSwap(swapData);
+        IERC20(WAVAX_TES_REMOTE).approve(CELL_SOURCE_CHAIN, SWAP_AMOUNT_IN);
+        Cell(CELL_SOURCE_CHAIN).crossChainSwap(instructions);
 
         vm.stopBroadcast();
     }
@@ -73,4 +90,4 @@ contract WarpMessengerMock {
     function sendWarpMessage(bytes calldata payload) external returns (bytes32 messageID) {}
 }
 
-// forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --verify -vvvv
+// forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
