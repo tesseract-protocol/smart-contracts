@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
-import "./../src/Cell.sol";
+import "./../src/YakSwapCell.sol";
 
 contract DeployCellFuji is Script {
     address public constant TELEPORTER_REGISTRY = 0xF86Cb19Ad8405AEFa7d09C778215D2Cb6eBfB228;
@@ -13,7 +13,7 @@ contract DeployCellFuji is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        Cell cell = new Cell(TELEPORTER_REGISTRY, ROUTER, PRIMARY_FEE_TOKEN);
+        new YakSwapCell(TELEPORTER_REGISTRY, ROUTER, PRIMARY_FEE_TOKEN);
 
         vm.stopBroadcast();
     }

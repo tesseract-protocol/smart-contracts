@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./IYakRouter.sol";
-
 struct CellPayload {
     Instructions instructions;
     uint256 hop;
@@ -15,10 +13,8 @@ struct Instructions {
 
 struct Hop {
     Action action;
-    address tokenIn;
-    uint256 amountIn;
     uint256 gasLimit;
-    Trade trade;
+    bytes trade;
     BridgePath bridgePath;
 }
 
@@ -34,4 +30,18 @@ enum Action {
     HopAndCall,
     SwapAndHop,
     SwapAndTransfer
+}
+
+interface ICell {
+    event CellReceivedTokens(
+        bytes32 indexed sourceBlockchainID,
+        address indexed sourceBridge,
+        address indexed originSender,
+        address token,
+        uint256 amount
+    );
+
+    event InitiatedSwap(address indexed sender, address indexed tokenIn, uint256 amountIn);
+
+    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external;
 }

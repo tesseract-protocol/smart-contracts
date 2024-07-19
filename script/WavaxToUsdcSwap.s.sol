@@ -2,8 +2,8 @@
 pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
-import "./../src/interfaces/ISwapData.sol";
 import "./../src/Cell.sol";
+import "./../src/interfaces/IYakRouter.sol";
 
 // forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
 
@@ -19,8 +19,8 @@ contract WavaxToUsdcSwap is Script {
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
     IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant CELL_DESTINATION_CHAIN = 0xEfa9dfd52cfcD616cAFC8339a7F06E96f4dbC4F5;
-    address constant CELL_SOURCE_CHAIN = 0x245C3E01B90CFB2246B5B854AdC91a52a1aA587c;
+    address constant CELL_DESTINATION_CHAIN = 0xfC22aae88121994FA446ADE05f695B21E9d11A32;
+    address constant CELL_SOURCE_CHAIN = 0x2Ef1D0796Ca55d3D827B07227e3dfc26149086Ac;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
@@ -44,10 +44,8 @@ contract WavaxToUsdcSwap is Script {
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
             action: Action.HopAndCall,
-            tokenIn: WAVAX_TES_REMOTE,
-            amountIn: SWAP_AMOUNT_IN,
             gasLimit: 2_500_000,
-            trade: Trade(0, 0, new address[](0), new address[](0)),
+            trade: "",
             bridgePath: BridgePath({
                 bridgeSourceChain: WAVAX_TES_REMOTE,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
@@ -57,10 +55,8 @@ contract WavaxToUsdcSwap is Script {
         });
         hops[1] = Hop({
             action: Action.SwapAndHop,
-            tokenIn: WAVAX_FUJI,
-            amountIn: SWAP_AMOUNT_IN,
             gasLimit: 0,
-            trade: trade,
+            trade: abi.encode(trade),
             bridgePath: BridgePath({
                 bridgeSourceChain: USDC_FUJI_HOME,
                 bridgeDestinationChain: USDC_TES_REMOTE,
@@ -80,7 +76,7 @@ contract WavaxToUsdcSwap is Script {
         vm.startBroadcast(privateKey);
 
         IERC20(WAVAX_TES_REMOTE).approve(CELL_SOURCE_CHAIN, SWAP_AMOUNT_IN);
-        Cell(CELL_SOURCE_CHAIN).crossChainSwap(instructions);
+        Cell(CELL_SOURCE_CHAIN).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
 
         vm.stopBroadcast();
     }
