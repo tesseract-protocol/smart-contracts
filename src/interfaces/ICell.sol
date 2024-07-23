@@ -8,6 +8,9 @@ struct CellPayload {
 
 struct Instructions {
     address receiver;
+    bytes32 sourceBlockchainId;
+    address sourcePrimaryFeeToken;
+    uint256 rollbackTeleporterFee;
     Hop[] hops;
 }
 
@@ -23,6 +26,7 @@ struct BridgePath {
     address bridgeDestinationChain;
     address cellDestinationChain;
     bytes32 destinationBlockchainId;
+    uint256 teleporterFee;
 }
 
 enum Action {

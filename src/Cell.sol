@@ -56,22 +56,52 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         } else if (hop.action == Action.HopAndCall) {
             _sendAndCall(token, amount, payload);
         } else if (hop.action == Action.SwapAndHop) {
-            (address tokenOut, uint256 amountOut) = _swap(token, amount, payload);
-            if (payload.hop == payload.instructions.hops.length - 1) {
-                _send(tokenOut, amountOut, payload);
-            } else {
-                _sendAndCall(tokenOut, amountOut, payload);
+            (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
+            if (success) {
+                if (payload.hop == payload.instructions.hops.length - 1) {
+                    _send(tokenOut, amountOut, payload);
+                } else {
+                    _sendAndCall(tokenOut, amountOut, payload);
+                }
             }
         } else if (hop.action == Action.SwapAndTransfer) {
-            (address tokenOut, uint256 amountOut) = _swap(token, amount, payload);
-            IERC20(tokenOut).safeTransfer(payload.instructions.receiver, amountOut);
+            (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
+            if (success) {
+                IERC20(tokenOut).safeTransfer(payload.instructions.receiver, amountOut);
+            }
+        }
+    }
+
+    function _trySwap(address token, uint256 amount, CellPayload memory payload)
+        internal
+        returns (bool success, address tokenOut, uint256 amountOut)
+    {
+        (success, tokenOut, amountOut) = _swap(token, amount, payload);
+        if (success) return (success, tokenOut, amountOut);
+
+        if (payload.hop == 1) {
+            SendTokensInput memory input = SendTokensInput({
+                destinationBlockchainID: payload.instructions.sourceBlockchainId,
+                destinationTokenTransferrerAddress: payload.instructions.hops[0].bridgePath.bridgeSourceChain,
+                recipient: payload.instructions.receiver,
+                primaryFeeTokenAddress: payload.instructions.sourcePrimaryFeeToken,
+                primaryFee: payload.instructions.rollbackTeleporterFee,
+                secondaryFee: 0,
+                requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
+                multiHopFallback: address(0)
+            });
+            IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
+            IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(input, amount);
+            return (false, address(0), 0);
+        } else {
+            revert("Swap failed");
         }
     }
 
     function _swap(address token, uint256 amount, CellPayload memory payload)
         internal
         virtual
-        returns (address tokenOut, uint256 amountOut);
+        returns (bool success, address tokenOut, uint256 amountOut);
 
     function _sendAndCall(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
@@ -85,7 +115,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             multiHopFallback: address(0),
             fallbackRecipient: msg.sender,
             primaryFeeTokenAddress: primaryFeeToken,
-            primaryFee: 0,
+            primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: 0
         });
         IERC20(hop.bridgePath.bridgeSourceChain).approve(token, amount);
@@ -99,7 +129,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             destinationTokenTransferrerAddress: hop.bridgePath.bridgeDestinationChain,
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: primaryFeeToken,
-            primaryFee: 0,
+            primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: 0,
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: address(0)

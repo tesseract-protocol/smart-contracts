@@ -5,9 +5,9 @@ import "forge-std/Script.sol";
 import "./../src/Cell.sol";
 import "./../src/interfaces/IYakRouter.sol";
 
-// forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
+// forge script --chain 732 script/SwapRollback.s.sol:SwapRollback --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
 
-contract WavaxToUsdcSwap is Script {
+contract SwapRollback is Script {
     bytes32 constant FUJI_BLOCKCHAIN_ID = 0x7fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5;
     bytes32 constant TES_BLOCKCHAIN_ID = 0x6b1e340aeda6d5780cef4e45728665efa61057acc52fb862b75def9190974288;
 
@@ -26,24 +26,11 @@ contract WavaxToUsdcSwap is Script {
 
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        string memory fujiRpc = vm.envString("FUJI_RPC_URL");
 
-        uint256 tesForkId = vm.activeFork();
-        uint256 fujiForkId = vm.createFork(fujiRpc);
-        vm.selectFork(fujiForkId);
-        FormattedOffer memory offer = ROUTER.findBestPath(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, 2);
-        console.log(offer.amounts[offer.amounts.length - 1]);
-
-        vm.selectFork(tesForkId);
         WarpMessengerMock warp = new WarpMessengerMock();
         vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
 
-        Trade memory trade = Trade({
-            amountIn: offer.amounts[0],
-            amountOut: (offer.amounts[offer.amounts.length - 1] * 950) / 1000,
-            path: offer.path,
-            adapters: offer.adapters
-        });
+        Trade memory trade = Trade({amountIn: 0, amountOut: 1e18, path: new address[](0), adapters: new address[](0)});
 
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
@@ -95,5 +82,3 @@ contract WavaxToUsdcSwap is Script {
 contract WarpMessengerMock {
     function sendWarpMessage(bytes calldata payload) external returns (bytes32 messageID) {}
 }
-
-// forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
