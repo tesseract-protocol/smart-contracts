@@ -47,7 +47,22 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         _route(token, amount, cellPayload);
     }
 
-    /* Internal Functions */
+    /* External Abstract */
+
+    function route(uint256 amountIn, address tokenIn, address tokenOut, bytes calldata extras)
+        external
+        view
+        virtual
+        returns (bytes memory trade, uint256 gasEstimate);
+
+    /* Internal Abstract */
+
+    function _swap(address token, uint256 amount, CellPayload memory payload)
+        internal
+        virtual
+        returns (bool success, address tokenOut, uint256 amountOut);
+
+    /* Internal */
 
     function _route(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
@@ -97,11 +112,6 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             revert("Swap failed");
         }
     }
-
-    function _swap(address token, uint256 amount, CellPayload memory payload)
-        internal
-        virtual
-        returns (bool success, address tokenOut, uint256 amountOut);
 
     function _sendAndCall(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];

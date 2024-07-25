@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
 import "./../src/Cell.sol";
+import "./../src/YakSwapCell.sol";
 import "./../src/interfaces/IYakRouter.sol";
 
 // forge script --chain 732 script/WavaxToUsdcSwap.s.sol:WavaxToUsdcSwap --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
@@ -17,43 +18,38 @@ contract WavaxToUsdcSwap is Script {
     address constant USDC_FUJI = 0x5425890298aed601595a70AB815c96711a31Bc65;
     address constant USDC_FUJI_HOME = 0x801B217A93b7E6CC4D390dDFA91391083723F060;
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
-    IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant CELL_DESTINATION_CHAIN = 0x8b284449c8FF07F8448e0EaDc401be31Bf737c9F;
-    address constant CELL_SOURCE_CHAIN = 0x01774D88deeB642b290D0BE0ABe4656BA23D58CB;
+    address constant CELL_FUJI = 0x54CE76b0839BF362aA04073321932d06c2Bf91dA;
+    address constant CELL_TES = 0xcBb369F24fA8fF5B84F3285Ecf1AdA91e36DD4eB;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
+
+    uint256 constant HOP_GAS_ESTIMATE = 500_000;
+    uint256 constant GAS_BUFFER = 500_000;
 
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         string memory fujiRpc = vm.envString("FUJI_RPC_URL");
-
         uint256 tesForkId = vm.activeFork();
         uint256 fujiForkId = vm.createFork(fujiRpc);
+
         vm.selectFork(fujiForkId);
-        FormattedOffer memory offer = ROUTER.findBestPath(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, 2);
-        console.log(offer.amounts[offer.amounts.length - 1]);
+
+        YakSwapCell.Extras memory extras = YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 500});
+        (bytes memory trade, uint256 gasEstimate) =
+            YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, abi.encode(extras));
 
         vm.selectFork(tesForkId);
-        WarpMessengerMock warp = new WarpMessengerMock();
-        vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
-
-        Trade memory trade = Trade({
-            amountIn: offer.amounts[0],
-            amountOut: (offer.amounts[offer.amounts.length - 1] * 950) / 1000,
-            path: offer.path,
-            adapters: offer.adapters
-        });
 
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
             action: Action.HopAndCall,
-            gasLimit: 2_500_000,
+            gasLimit: gasEstimate + HOP_GAS_ESTIMATE * 2 + GAS_BUFFER,
             trade: "",
             bridgePath: BridgePath({
                 bridgeSourceChain: WAVAX_TES_REMOTE,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
-                cellDestinationChain: CELL_DESTINATION_CHAIN,
+                cellDestinationChain: CELL_FUJI,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: 0
             })
@@ -61,7 +57,7 @@ contract WavaxToUsdcSwap is Script {
         hops[1] = Hop({
             action: Action.SwapAndHop,
             gasLimit: 0,
-            trade: abi.encode(trade),
+            trade: trade,
             bridgePath: BridgePath({
                 bridgeSourceChain: USDC_FUJI_HOME,
                 bridgeDestinationChain: USDC_TES_REMOTE,
@@ -71,7 +67,7 @@ contract WavaxToUsdcSwap is Script {
             })
         });
 
-        address sourcePrimaryFeeToken = Cell(CELL_SOURCE_CHAIN).primaryFeeToken();
+        address sourcePrimaryFeeToken = Cell(CELL_TES).primaryFeeToken();
 
         Instructions memory instructions = Instructions({
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
@@ -83,10 +79,13 @@ contract WavaxToUsdcSwap is Script {
 
         //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
 
+        WarpMessengerMock warp = new WarpMessengerMock();
+        vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
+
         vm.startBroadcast(privateKey);
 
-        IERC20(WAVAX_TES_REMOTE).approve(CELL_SOURCE_CHAIN, SWAP_AMOUNT_IN);
-        Cell(CELL_SOURCE_CHAIN).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
+        IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN);
+        Cell(CELL_TES).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
 
         vm.stopBroadcast();
     }

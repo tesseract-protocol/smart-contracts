@@ -8,6 +8,13 @@ contract HopOnlyCell is Cell {
         Cell(teleporterRegistryAddress, primaryFeeTokenAddress)
     {}
 
+    function route(uint256 amountIn, address tokenIn, address tokenOut, bytes calldata extras)
+        external
+        view
+        override
+        returns (bytes memory trade, uint256 gasEstimate)
+    {}
+
     function _swap(address token, uint256 amount, CellPayload memory)
         internal
         pure
