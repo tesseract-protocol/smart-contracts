@@ -19,13 +19,19 @@ contract WavaxToUsdcSwap is Script {
     address constant USDC_FUJI_HOME = 0x801B217A93b7E6CC4D390dDFA91391083723F060;
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
 
-    address constant CELL_FUJI = 0x54CE76b0839BF362aA04073321932d06c2Bf91dA;
-    address constant CELL_TES = 0xcBb369F24fA8fF5B84F3285Ecf1AdA91e36DD4eB;
+    address constant CELL_FUJI = 0x292Dd81b91244b98507Ed597dCf48d9938bFF372;
+    address constant CELL_TES = 0x9Dc81bD0b6B46918884AAA4eAFD833834Ca7DE01;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
     uint256 constant HOP_GAS_ESTIMATE = 500_000;
     uint256 constant GAS_BUFFER = 500_000;
+
+    uint256 constant TRADE_SLIPPAGE_BIPS = 500;
+
+    uint256 constant TELEPORTER_FEE_BIPS_ORIGIN = 100;
+    uint256 constant TELEPORTER_FEE_BIPS_DESTINATION = 200;
+    uint256 constant FEE_BIPS_DIVISOR = 10_000;
 
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
@@ -35,11 +41,17 @@ contract WavaxToUsdcSwap is Script {
 
         vm.selectFork(fujiForkId);
 
-        YakSwapCell.Extras memory extras = YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 500});
+        YakSwapCell.Extras memory extras =
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS});
         (bytes memory trade, uint256 gasEstimate) =
             YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, abi.encode(extras));
 
+        Trade memory encodedTrade = abi.decode(trade, (Trade));
+        console.log("AMOUNT OUT %d", encodedTrade.amountOut);
+
         vm.selectFork(tesForkId);
+
+        uint256 teleporterFeeOrigin = (SWAP_AMOUNT_IN * TELEPORTER_FEE_BIPS_ORIGIN) / FEE_BIPS_DIVISOR;
 
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
@@ -51,7 +63,7 @@ contract WavaxToUsdcSwap is Script {
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_FUJI,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
-                teleporterFee: 0
+                teleporterFee: teleporterFeeOrigin
             })
         });
         hops[1] = Hop({
@@ -63,15 +75,12 @@ contract WavaxToUsdcSwap is Script {
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
-                teleporterFee: 0
+                teleporterFee: (encodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR
             })
         });
 
-        address sourcePrimaryFeeToken = Cell(CELL_TES).primaryFeeToken();
-
         Instructions memory instructions = Instructions({
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
-            sourcePrimaryFeeToken: sourcePrimaryFeeToken,
             rollbackTeleporterFee: 0,
             receiver: vm.addr(privateKey),
             hops: hops
@@ -84,8 +93,8 @@ contract WavaxToUsdcSwap is Script {
 
         vm.startBroadcast(privateKey);
 
-        IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN);
-        Cell(CELL_TES).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
+        IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN + teleporterFeeOrigin);
+        Cell(CELL_TES).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
 
         vm.stopBroadcast();
     }

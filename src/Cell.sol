@@ -14,13 +14,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
 
     TeleporterRegistry public immutable teleporterRegistry;
-    address public immutable primaryFeeToken;
 
-    constructor(address teleporterRegistryAddress, address primaryFeeTokenAddress) {
+    constructor(address teleporterRegistryAddress) {
         require(teleporterRegistryAddress > address(0), "Cell: invalid teleporter registry address");
 
         teleporterRegistry = TeleporterRegistry(teleporterRegistryAddress);
-        primaryFeeToken = primaryFeeTokenAddress;
     }
 
     /* Entry Points */
@@ -66,23 +64,25 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
 
     function _route(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
-        if (hop.action == Action.Hop) {
-            _send(token, amount, payload);
-        } else if (hop.action == Action.HopAndCall) {
-            _sendAndCall(token, amount, payload);
-        } else if (hop.action == Action.SwapAndHop) {
-            (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
-            if (success) {
-                if (payload.hop == payload.instructions.hops.length - 1) {
-                    _send(tokenOut, amountOut, payload);
-                } else {
-                    _sendAndCall(tokenOut, amountOut, payload);
-                }
-            }
-        } else if (hop.action == Action.SwapAndTransfer) {
+        if (hop.action == Action.SwapAndTransfer) {
             (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
             if (success) {
                 IERC20(tokenOut).safeTransfer(payload.instructions.receiver, amountOut);
+            }
+        } else {
+            if (hop.action == Action.Hop) {
+                _send(token, amount, payload);
+            } else if (hop.action == Action.HopAndCall) {
+                _sendAndCall(token, amount, payload);
+            } else if (hop.action == Action.SwapAndHop) {
+                (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
+                if (success) {
+                    if (payload.hop == payload.instructions.hops.length - 1) {
+                        _send(tokenOut, amountOut, payload);
+                    } else {
+                        _sendAndCall(tokenOut, amountOut, payload);
+                    }
+                }
             }
         }
     }
@@ -94,19 +94,25 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         (success, tokenOut, amountOut) = _swap(token, amount, payload);
         if (success) return (success, tokenOut, amountOut);
 
+        emit SwapFailed(token, amount, tokenOut, amountOut);
+
         if (payload.hop == 1) {
+            require(payload.instructions.rollbackTeleporterFee < amount, "Invalid fee");
             SendTokensInput memory input = SendTokensInput({
                 destinationBlockchainID: payload.instructions.sourceBlockchainId,
                 destinationTokenTransferrerAddress: payload.instructions.hops[0].bridgePath.bridgeSourceChain,
                 recipient: payload.instructions.receiver,
-                primaryFeeTokenAddress: payload.instructions.sourcePrimaryFeeToken,
+                primaryFeeTokenAddress: token,
                 primaryFee: payload.instructions.rollbackTeleporterFee,
                 secondaryFee: 0,
                 requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
                 multiHopFallback: address(0)
             });
             IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
-            IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(input, amount);
+            IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(
+                input, amount - payload.instructions.rollbackTeleporterFee
+            );
+            emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
             return (false, address(0), 0);
         } else {
             revert("Swap failed");
@@ -124,12 +130,14 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             recipientGasLimit: hop.gasLimit,
             multiHopFallback: address(0),
             fallbackRecipient: msg.sender,
-            primaryFeeTokenAddress: primaryFeeToken,
+            primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: 0
         });
         IERC20(hop.bridgePath.bridgeSourceChain).approve(token, amount);
-        IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(input, amount);
+        IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
+            input, amount - hop.bridgePath.teleporterFee
+        );
     }
 
     function _send(address token, uint256 amount, CellPayload memory payload) internal {
@@ -138,13 +146,13 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             destinationBlockchainID: hop.bridgePath.destinationBlockchainId,
             destinationTokenTransferrerAddress: hop.bridgePath.bridgeDestinationChain,
             recipient: payload.instructions.receiver,
-            primaryFeeTokenAddress: primaryFeeToken,
+            primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: 0,
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: address(0)
         });
         IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
-        IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount);
+        IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount - hop.bridgePath.teleporterFee);
     }
 }

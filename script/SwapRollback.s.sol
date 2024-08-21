@@ -19,8 +19,8 @@ contract SwapRollback is Script {
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
     IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant CELL_DESTINATION_CHAIN = 0x8b284449c8FF07F8448e0EaDc401be31Bf737c9F;
-    address constant CELL_SOURCE_CHAIN = 0x01774D88deeB642b290D0BE0ABe4656BA23D58CB;
+    address constant CELL_DESTINATION_CHAIN = 0x4C5b32F836017d4686FDB3A7eB129c8642A97495;
+    address constant CELL_SOURCE_CHAIN = 0xC7bA2ca67B4CFaAAe17F7921E2C8b99f54BBA3DA;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
@@ -58,11 +58,8 @@ contract SwapRollback is Script {
             })
         });
 
-        address sourcePrimaryFeeToken = Cell(CELL_SOURCE_CHAIN).primaryFeeToken();
-
         Instructions memory instructions = Instructions({
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
-            sourcePrimaryFeeToken: sourcePrimaryFeeToken,
             rollbackTeleporterFee: 0,
             receiver: vm.addr(privateKey),
             hops: hops

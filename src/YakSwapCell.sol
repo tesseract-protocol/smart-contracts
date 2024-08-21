@@ -13,9 +13,7 @@ contract YakSwapCell is Cell {
 
     IYakRouter public immutable router;
 
-    constructor(address teleporterRegistryAddress, address routerAddress, address primaryFeeTokenAddress)
-        Cell(teleporterRegistryAddress, primaryFeeTokenAddress)
-    {
+    constructor(address teleporterRegistryAddress, address routerAddress) Cell(teleporterRegistryAddress) {
         router = IYakRouter(routerAddress);
     }
 

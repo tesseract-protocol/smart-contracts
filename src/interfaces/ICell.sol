@@ -9,7 +9,6 @@ struct CellPayload {
 struct Instructions {
     address receiver;
     bytes32 sourceBlockchainId;
-    address sourcePrimaryFeeToken;
     uint256 rollbackTeleporterFee;
     Hop[] hops;
 }
@@ -46,6 +45,10 @@ interface ICell {
     );
 
     event InitiatedSwap(address indexed sender, address indexed tokenIn, uint256 amountIn);
+
+    event SwapFailed(address indexed tokenIn, uint256 amountIn, address indexed tokenOut, uint256 amountOut);
+
+    event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
     function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external;
 }
