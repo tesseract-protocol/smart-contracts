@@ -4,8 +4,6 @@ pragma solidity 0.8.18;
 import "./Cell.sol";
 
 contract HopOnlyCell is Cell {
-    constructor(address teleporterRegistryAddress) Cell(teleporterRegistryAddress) {}
-
     function route(uint256 amountIn, address tokenIn, address tokenOut, bytes calldata extras)
         external
         view

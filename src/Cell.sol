@@ -13,16 +13,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
 
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
 
-    TeleporterRegistry public immutable teleporterRegistry;
-
-    constructor(address teleporterRegistryAddress) {
-        require(teleporterRegistryAddress > address(0), "Cell: invalid teleporter registry address");
-
-        teleporterRegistry = TeleporterRegistry(teleporterRegistryAddress);
-    }
-
     /* Entry Points */
-
     function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external override {
         emit InitiatedSwap(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -128,11 +119,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             recipientPayload: abi.encode(payload),
             requiredGasLimit: hop.gasLimit + GAS_LIMIT_BRIDGE_HOP,
             recipientGasLimit: hop.gasLimit,
-            multiHopFallback: address(0),
-            fallbackRecipient: msg.sender,
+            multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0),
+            fallbackRecipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: 0
+            secondaryFee: hop.bridgePath.secondaryTeleporterFee
         });
         IERC20(hop.bridgePath.bridgeSourceChain).approve(token, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
@@ -148,9 +139,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: 0,
+            secondaryFee: hop.bridgePath.secondaryTeleporterFee,
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
-            multiHopFallback: address(0)
+            multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
         });
         IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount - hop.bridgePath.teleporterFee);

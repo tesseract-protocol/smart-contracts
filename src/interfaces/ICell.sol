@@ -21,11 +21,13 @@ struct Hop {
 }
 
 struct BridgePath {
+    bool multihop;
     address bridgeSourceChain;
     address bridgeDestinationChain;
     address cellDestinationChain;
     bytes32 destinationBlockchainId;
     uint256 teleporterFee;
+    uint256 secondaryTeleporterFee;
 }
 
 enum Action {
