@@ -16,16 +16,21 @@ contract BridgePathRegistry is Ownable {
     mapping(bytes32 => address) public cells;
 
     event SetBridgePath(
-        address indexed token, address localAddress, address remoteAddress, bytes32 indexed destinationBlockchainID
+        address indexed token,
+        address localAddress,
+        address remoteAddress,
+        bytes32 indexed destinationBlockchainID
     );
     event BridgePathRemoved(address indexed token, bytes32 indexed destinationBlockchainID);
     event SetCell(bytes32 indexed destinationBlockchainID, address indexed cell);
     event CellRemoved(bytes32 indexed destinationBlockchainID);
 
-    function setBridgePath(address token, address localAddress, address remoteAddress, bytes32 destinationBlockchainID)
-        external
-        onlyOwner
-    {
+    function setBridgePath(
+        address token,
+        address localAddress,
+        address remoteAddress,
+        bytes32 destinationBlockchainID
+    ) external onlyOwner {
         require(token != address(0), "Invalid token address");
         require(localAddress != address(0), "Invalid local address");
         require(remoteAddress != address(0), "Invalid remote address");

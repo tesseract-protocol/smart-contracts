@@ -41,10 +41,17 @@ contract WavaxToUsdcSwap is Script {
 
         vm.selectFork(fujiForkId);
 
-        YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS});
-        (bytes memory trade, uint256 gasEstimate) =
-            YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, abi.encode(extras));
+        YakSwapCell.Extras memory extras = YakSwapCell.Extras({
+            maxSteps: 2,
+            gasPrice: 25e9,
+            slippageBips: TRADE_SLIPPAGE_BIPS
+        });
+        (bytes memory trade, uint256 gasEstimate) = YakSwapCell(CELL_FUJI).route(
+            SWAP_AMOUNT_IN,
+            WAVAX_FUJI,
+            USDC_FUJI,
+            abi.encode(extras)
+        );
 
         Trade memory encodedTrade = abi.decode(trade, (Trade));
         console.log("AMOUNT OUT %d", encodedTrade.amountOut);
@@ -65,7 +72,7 @@ contract WavaxToUsdcSwap is Script {
                 cellDestinationChain: CELL_FUJI,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: teleporterFeeOrigin,
-                secondryTeleporterFee: 0
+                secondaryTeleporterFee: 0
             })
         });
         hops[1] = Hop({
@@ -79,7 +86,7 @@ contract WavaxToUsdcSwap is Script {
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
                 teleporterFee: (encodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
-                secondryTeleporterFee: 0
+                secondaryTeleporterFee: 0
             })
         });
 

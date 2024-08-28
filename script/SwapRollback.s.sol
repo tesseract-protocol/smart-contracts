@@ -44,7 +44,7 @@ contract SwapRollback is Script {
                 cellDestinationChain: CELL_DESTINATION_CHAIN,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: 0,
-                secondryTeleporterFee: 0
+                secondaryTeleporterFee: 0
             })
         });
         hops[1] = Hop({
@@ -58,7 +58,7 @@ contract SwapRollback is Script {
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
                 teleporterFee: 0,
-                secondryTeleporterFee: 0
+                secondaryTeleporterFee: 0
             })
         });
 
