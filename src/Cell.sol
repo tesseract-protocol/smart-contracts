@@ -38,20 +38,18 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
 
     /* External Abstract */
 
-    function route(
-        uint256 amountIn,
-        address tokenIn,
-        address tokenOut,
-        bytes calldata extras
-    ) external view virtual returns (bytes memory trade, uint256 gasEstimate);
+    function route(uint256 amountIn, address tokenIn, address tokenOut, bytes calldata extras)
+        external
+        view
+        virtual
+        returns (bytes memory trade, uint256 gasEstimate);
 
     /* Internal Abstract */
 
-    function _swap(
-        address token,
-        uint256 amount,
-        CellPayload memory payload
-    ) internal virtual returns (bool success, address tokenOut, uint256 amountOut);
+    function _swap(address token, uint256 amount, CellPayload memory payload)
+        internal
+        virtual
+        returns (bool success, address tokenOut, uint256 amountOut);
 
     /* Internal */
 
@@ -80,11 +78,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         }
     }
 
-    function _trySwap(
-        address token,
-        uint256 amount,
-        CellPayload memory payload
-    ) internal returns (bool success, address tokenOut, uint256 amountOut) {
+    function _trySwap(address token, uint256 amount, CellPayload memory payload)
+        internal
+        returns (bool success, address tokenOut, uint256 amountOut)
+    {
         (success, tokenOut, amountOut) = _swap(token, amount, payload);
         if (success) return (success, tokenOut, amountOut);
 
@@ -104,8 +101,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             });
             IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
             IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(
-                input,
-                amount - payload.instructions.rollbackTeleporterFee
+                input, amount - payload.instructions.rollbackTeleporterFee
             );
             emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
             return (false, address(0), 0);
@@ -129,10 +125,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: hop.bridgePath.secondaryTeleporterFee
         });
-        IERC20(hop.bridgePath.bridgeSourceChain).approve(token, amount);
+        IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
-            input,
-            amount - hop.bridgePath.teleporterFee
+            input, amount - hop.bridgePath.teleporterFee
         );
     }
 

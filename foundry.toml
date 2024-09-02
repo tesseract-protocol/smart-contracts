@@ -8,4 +8,7 @@ libs = ["lib"]
 fuji = "${FUJI_RPC_URL}"
 tes = "${TESCHAIN_RPC_URL}"
 
+[fmt]
+int_types = "long"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

@@ -41,20 +41,13 @@ contract WavaxToUsdcSwap is Script {
 
         vm.selectFork(fujiForkId);
 
-        YakSwapCell.Extras memory extras = YakSwapCell.Extras({
-            maxSteps: 2,
-            gasPrice: 25e9,
-            slippageBips: TRADE_SLIPPAGE_BIPS
-        });
-        (bytes memory trade, uint256 gasEstimate) = YakSwapCell(CELL_FUJI).route(
-            SWAP_AMOUNT_IN,
-            WAVAX_FUJI,
-            USDC_FUJI,
-            abi.encode(extras)
-        );
+        YakSwapCell.Extras memory extras =
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS});
+        (bytes memory trade, uint256 gasEstimate) =
+            YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, abi.encode(extras));
 
-        Trade memory encodedTrade = abi.decode(trade, (Trade));
-        console.log("AMOUNT OUT %d", encodedTrade.amountOut);
+        Trade memory decodedTrade = abi.decode(trade, (Trade));
+        console.log("AMOUNT OUT %d", decodedTrade.amountOut);
 
         vm.selectFork(tesForkId);
 
@@ -85,7 +78,7 @@ contract WavaxToUsdcSwap is Script {
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
-                teleporterFee: (encodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
+                teleporterFee: (decodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
                 secondaryTeleporterFee: 0
             })
         });
