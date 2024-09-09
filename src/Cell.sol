@@ -8,12 +8,21 @@ import "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.s
 import "@teleporter/upgrades/TeleporterRegistry.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
 
+/**
+ * @title Cell
+ * @dev Abstract contract for cross-chain token swaps and transfers
+ */
 abstract contract Cell is ICell, IERC20SendAndCallReceiver {
     using SafeERC20 for IERC20;
 
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
 
-    /* Entry Points */
+    /**
+     * @notice Initiates a cross-chain swap
+     * @param token The address of the token to be swapped
+     * @param amount The amount of tokens to be swapped
+     * @param instructions The instructions for the cross-chain swap
+     */
     function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external override {
         emit InitiatedSwap(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -21,6 +30,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         _route(token, amount, payload);
     }
 
+    /**
+     * @notice Receives tokens from another chain and processes them
+     * @param sourceBlockchainID The ID of the source blockchain
+     * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
+     * @param originSenderAddress The address of the sender on the origin chain
+     * @param token The address of the received token
+     * @param amount The amount of tokens received
+     * @param payload The payload containing instructions for further processing
+     */
     function receiveTokens(
         bytes32 sourceBlockchainID,
         address originTokenTransferrerAddress,
@@ -36,23 +54,51 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         _route(token, amount, cellPayload);
     }
 
-    /* External Abstract */
-
+    /**
+     * @notice Calculates the route for a token swap
+     * @param amountIn The amount of input tokens
+     * @param tokenIn The address of the input token
+     * @param tokenOut The address of the output token
+     * @param extras Additional data for routing
+     * @return trade The encoded trade data
+     * @return gasEstimate The estimated gas cost for the trade
+     */
     function route(uint256 amountIn, address tokenIn, address tokenOut, bytes calldata extras)
         external
         view
         virtual
         returns (bytes memory trade, uint256 gasEstimate);
 
-    /* Internal Abstract */
-
+    /**
+     * @notice Performs a token swap
+     * @dev IMPORTANT: This function should use proper exception handling to manage errors.
+     * Use try/catch blocks to handle exceptions that may occur during the swap process.
+     * Indicate success or failure through the success return parameter.
+     * If an exception occurs or the swap fails for any reason:
+     * 1. Catch the exception and handle it gracefully.
+     * 2. Set success to false.
+     * 3. Provide appropriate values for tokenOut (e.g., address(0)) and amountOut (e.g., 0).
+     * 4. Optionally, emit an event with error details for off-chain tracking.
+     * This approach allows the calling function to handle failed swaps gracefully,
+     * potentially enabling rollbacks or other recovery mechanisms.
+     * @param token The address of the input token
+     * @param amount The amount of input tokens
+     * @param payload The payload containing swap instructions
+     * @return success Whether the swap was successful (true) or failed (false)
+     * @return tokenOut The address of the output token (or address(0) if swap failed)
+     * @return amountOut The amount of output tokens (or 0 if swap failed)
+     */
     function _swap(address token, uint256 amount, CellPayload memory payload)
         internal
         virtual
         returns (bool success, address tokenOut, uint256 amountOut);
 
-    /* Internal */
-
+    /**
+     * @notice Routes the tokens based on the provided payload
+     * @param token The address of the token to route
+     * @param amount The amount of tokens to route
+     * @param payload The payload containing routing instructions
+     */
     function _route(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
         if (hop.action == Action.SwapAndTransfer) {
@@ -78,6 +124,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         }
     }
 
+    /**
+     * @notice Attempts to perform a swap and handles failures
+     * @param token The address of the input token
+     * @param amount The amount of input tokens
+     * @param payload The payload containing swap instructions
+     * @return success Whether the swap was successful
+     * @return tokenOut The address of the output token
+     * @return amountOut The amount of output tokens
+     */
     function _trySwap(address token, uint256 amount, CellPayload memory payload)
         internal
         returns (bool success, address tokenOut, uint256 amountOut)
@@ -110,6 +165,12 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         }
     }
 
+    /**
+     * @notice Sends tokens to another chain and calls a contract
+     * @param token The address of the token to send
+     * @param amount The amount of tokens to send
+     * @param payload The payload containing transfer instructions
+     */
     function _sendAndCall(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
         SendAndCallInput memory input = SendAndCallInput({
@@ -131,6 +192,12 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         );
     }
 
+    /**
+     * @notice Sends tokens to another chain
+     * @param token The address of the token to send
+     * @param amount The amount of tokens to send
+     * @param payload The payload containing transfer instructions
+     */
     function _send(address token, uint256 amount, CellPayload memory payload) internal {
         Hop memory hop = payload.instructions.hops[payload.hop];
         SendTokensInput memory input = SendTokensInput({
