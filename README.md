@@ -30,6 +30,6 @@ Based on [Yak Swap](https://github.com/yieldyak/yak-aggregator), using onchain q
 ## Important Notes
 
 - Trust assumptions exist for L1 interactions
-- Home and Remote tokens must be ICTT-deployed
-- Inherent risks in cross-L1 transactions
+- `tokenIn` and `tokenOut` tokens used within a `path` must have ICTT deployments (for TokenHome and TokenRemote)
+- Inherent risks in cross-L1 transactions, including relayer execution
 - For full details on Avalanche's new L1 framework, refer to [ACP-77](https://github.com/avalanche-foundation/ACPs/blob/main/ACPs/77-reinventing-subnets/README.md).
