@@ -9,12 +9,14 @@ import "./interfaces/IYakRouter.sol";
  * @dev A concrete implementation of the Cell contract for cross-chain swaps using the YakRouter
  */
 contract YakSwapCell is Cell {
+    using SafeERC20 for IERC20;
     /**
      * @dev Additional parameters for the YakRouter swap
      * @param maxSteps Maximum number of steps in the swap path
      * @param gasPrice Gas price to be used for gas estimation
      * @param slippageBips Slippage tolerance in basis points (1 bip = 0.01%)
      */
+
     struct Extras {
         uint256 maxSteps;
         uint256 gasPrice;
@@ -87,7 +89,7 @@ contract YakSwapCell is Cell {
             return (false, address(0), 0);
         }
         uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
-        IERC20(token).approve(address(router), amount);
+        IERC20(token).forceApprove(address(router), amount);
         try IYakRouter(router).swapNoSplit(trade, address(this), 0) {
             success = true;
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;

@@ -154,7 +154,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
                 requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
                 multiHopFallback: address(0)
             });
-            IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
+            IERC20(token).forceApprove(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
             IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(
                 input, amount - payload.instructions.rollbackTeleporterFee
             );
@@ -186,7 +186,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: hop.bridgePath.secondaryTeleporterFee
         });
-        IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
+        IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
             input, amount - hop.bridgePath.teleporterFee
         );
@@ -210,7 +210,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
         });
-        IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
+        IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount - hop.bridgePath.teleporterFee);
     }
 }
