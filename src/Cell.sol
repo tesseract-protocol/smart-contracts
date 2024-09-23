@@ -15,8 +15,6 @@ import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceive
 abstract contract Cell is ICell, IERC20SendAndCallReceiver {
     using SafeERC20 for IERC20;
 
-    uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
-
     /**
      * @notice Initiates a cross-chain swap
      * @param token The address of the token to be swapped
@@ -142,7 +140,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
 
         emit SwapFailed(token, amount, tokenOut, amountOut);
 
-        if (payload.hop == 1) {
+        if (payload.hop == 1 && payload.instructions.rollbackGasLimit > 0) {
             require(payload.instructions.rollbackTeleporterFee < amount, "Invalid fee");
             SendTokensInput memory input = SendTokensInput({
                 destinationBlockchainID: payload.instructions.sourceBlockchainId,
@@ -151,7 +149,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
                 primaryFeeTokenAddress: token,
                 primaryFee: payload.instructions.rollbackTeleporterFee,
                 secondaryFee: 0,
-                requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
+                requiredGasLimit: payload.instructions.rollbackGasLimit,
                 multiHopFallback: address(0)
             });
             IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
@@ -178,8 +176,8 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             destinationTokenTransferrerAddress: hop.bridgePath.bridgeDestinationChain,
             recipientContract: hop.bridgePath.cellDestinationChain,
             recipientPayload: abi.encode(payload),
-            requiredGasLimit: hop.gasLimit + GAS_LIMIT_BRIDGE_HOP,
-            recipientGasLimit: hop.gasLimit,
+            requiredGasLimit: hop.requiredGasLimit,
+            recipientGasLimit: hop.recipientGasLimit,
             multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0),
             fallbackRecipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
@@ -207,7 +205,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: hop.bridgePath.secondaryTeleporterFee,
-            requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
+            requiredGasLimit: hop.requiredGasLimit,
             multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
         });
         IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);

@@ -56,7 +56,8 @@ contract WavaxToUsdcSwap is Script {
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
             action: Action.HopAndCall,
-            gasLimit: gasEstimate + HOP_GAS_ESTIMATE * 2 + GAS_BUFFER,
+            requiredGasLimit: gasEstimate + GAS_BUFFER + HOP_GAS_ESTIMATE,
+            recipientGasLimit: gasEstimate + GAS_BUFFER,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -70,7 +71,8 @@ contract WavaxToUsdcSwap is Script {
         });
         hops[1] = Hop({
             action: Action.SwapAndHop,
-            gasLimit: 0,
+            requiredGasLimit: HOP_GAS_ESTIMATE,
+            recipientGasLimit: 0,
             trade: trade,
             bridgePath: BridgePath({
                 multihop: false,
@@ -86,6 +88,7 @@ contract WavaxToUsdcSwap is Script {
         Instructions memory instructions = Instructions({
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
             rollbackTeleporterFee: 0,
+            rollbackGasLimit: HOP_GAS_ESTIMATE,
             receiver: vm.addr(privateKey),
             hops: hops
         });
