@@ -20,6 +20,7 @@ struct CellPayload {
  */
 struct Instructions {
     address receiver;
+    bool payableReceiver;
     bytes32 sourceBlockchainId;
     uint256 rollbackTeleporterFee;
     Hop[] hops;
@@ -53,7 +54,9 @@ struct Hop {
 struct BridgePath {
     bool multihop;
     address bridgeSourceChain;
+    bool sourceBridgeIsNative;
     address bridgeDestinationChain;
+    bool destinationBridgeIsNative;
     address cellDestinationChain;
     bytes32 destinationBlockchainId;
     uint256 teleporterFee;
@@ -95,6 +98,10 @@ interface ICell {
         uint256 amount
     );
 
+    event CellReceivedNativeTokens(
+        bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender
+    );
+
     /**
      * @dev Emitted when a cross-chain swap is initiated
      * @param sender Address initiating the swap
@@ -129,5 +136,5 @@ interface ICell {
      * @param amount Amount of tokens to be swapped
      * @param instructions Detailed instructions for the swap operation
      */
-    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external;
+    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external payable;
 }

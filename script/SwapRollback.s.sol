@@ -19,8 +19,8 @@ contract SwapRollback is Script {
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
     IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant CELL_DESTINATION_CHAIN = 0x357894f83b54EdC0e03F342e0164FcD2Bee78E32;
-    address constant CELL_SOURCE_CHAIN = 0x09f6f221A52d55009e8F843446D466261517Cbf7;
+    address payable constant CELL_DESTINATION_CHAIN = payable(0x357894f83b54EdC0e03F342e0164FcD2Bee78E32);
+    address payable constant CELL_SOURCE_CHAIN = payable(0x09f6f221A52d55009e8F843446D466261517Cbf7);
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
@@ -39,7 +39,9 @@ contract SwapRollback is Script {
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
+                destinationBridgeIsNative: false,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_DESTINATION_CHAIN,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
@@ -53,7 +55,9 @@ contract SwapRollback is Script {
             trade: abi.encode(trade),
             bridgePath: BridgePath({
                 multihop: false,
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: USDC_FUJI_HOME,
+                destinationBridgeIsNative: false,
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
@@ -66,6 +70,7 @@ contract SwapRollback is Script {
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
             rollbackTeleporterFee: 0,
             receiver: vm.addr(privateKey),
+            payableReceiver: true,
             hops: hops
         });
 

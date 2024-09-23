@@ -9,6 +9,8 @@ import "./Cell.sol";
  * This contract is useful for scenarios where tokens need to be transferred across chains without any exchange
  */
 contract HopOnlyCell is Cell {
+    constructor(address wrappedNativeToken) Cell(wrappedNativeToken) {}
+
     /**
      * @notice Placeholder function for routing logic
      * @dev This function is required by the Cell interface but is not used in HopOnlyCell
