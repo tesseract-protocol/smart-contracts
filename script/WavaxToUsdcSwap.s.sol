@@ -90,15 +90,13 @@ contract WavaxToUsdcSwap is Script {
             hops: hops
         });
 
-        //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
-
         WarpMessengerMock warp = new WarpMessengerMock();
         vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
 
         vm.startBroadcast(privateKey);
 
         IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN + teleporterFeeOrigin);
-        Cell(CELL_TES).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
+        Cell(CELL_TES).initiate(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
 
         vm.stopBroadcast();
     }
