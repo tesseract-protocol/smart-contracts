@@ -43,7 +43,7 @@ contract YakSwapCell is Cell {
      * @dev Constructs the YakSwapCell with a specified YakRouter
      * @param routerAddress The address of the YakRouter contract
      */
-    constructor(address routerAddress) {
+    constructor(address routerAddress, address wrappedNativeToken) Cell(wrappedNativeToken) {
         router = IYakRouter(routerAddress);
     }
 

@@ -4,7 +4,9 @@ pragma solidity 0.8.18;
 import "forge-std/Test.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
 import "avalanche-interchain-token-transfer/contracts/src/TokenHome/ERC20TokenHome.sol";
+import "avalanche-interchain-token-transfer/contracts/src/TokenHome/NativeTokenHome.sol";
 import "avalanche-interchain-token-transfer/contracts/src/interfaces/ITokenTransferrer.sol";
+import "avalanche-interchain-token-transfer/contracts/src/interfaces/INativeTokenTransferrer.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "./../src/HopOnlyCell.sol";
 import "./mocks/TeleporterRegistryMock.sol";
@@ -23,23 +25,49 @@ abstract contract BaseTest is Test {
 
     ERC20TokenHome public usdcTokenHome;
     ERC20TokenHome public wavaxTokenHome;
+    NativeTokenHome public nativeTokenHome;
     address public randomRemoteAddress;
 
-    TeleporterRegistryMock public teleporterRegistry = new TeleporterRegistryMock();
+    TeleporterRegistryMock public teleporterRegistry;
 
-    function setUp() public {
+    function setUp() public virtual {
+        vm.createSelectFork(vm.envString("CCHAIN_RPC_URL"), 50688487);
         WarpMessengerMock warp = new WarpMessengerMock();
         vm.etch(WARP_MESSENGER, address(warp).code);
 
+        teleporterRegistry = new TeleporterRegistryMock();
         usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), USDC, 6);
         wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), WAVAX, 18);
+        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), WAVAX);
         randomRemoteAddress = vm.addr(123456);
 
         fundBridge(address(usdcTokenHome), USDC, 6);
         fundBridge(address(wavaxTokenHome), WAVAX, 18);
+        fundNativeBridge(address(nativeTokenHome), 18);
     }
 
-    function mockReceiveTokens(address cell, uint256 amount, CellPayload memory payload) internal {
+    function mockReceiveTokens(address cell, address bridge, uint256 amount, CellPayload memory payload) internal {
+        TransferrerMessage memory message = TransferrerMessage({
+            messageType: TransferrerMessageType.SINGLE_HOP_CALL,
+            payload: abi.encode(
+                SingleHopCallMessage({
+                    sourceBlockchainID: REMOTE_BLOCKCHAIN_ID,
+                    originTokenTransferrerAddress: randomRemoteAddress,
+                    originSenderAddress: address(0),
+                    recipientContract: address(cell),
+                    amount: amount,
+                    recipientPayload: abi.encode(payload),
+                    recipientGasLimit: 5_000_000,
+                    fallbackRecipient: address(this)
+                })
+            )
+        });
+        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
+            bridge, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
+        );
+    }
+
+    function mockReceiveNative(address cell, uint256 amount, CellPayload memory payload) internal {
         TransferrerMessage memory message = TransferrerMessage({
             messageType: TransferrerMessageType.SINGLE_HOP_CALL,
             payload: abi.encode(
@@ -56,8 +84,36 @@ abstract contract BaseTest is Test {
             )
         });
         TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
-            address(usdcTokenHome), REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
+            address(nativeTokenHome), REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
         );
+    }
+
+    function fundNativeBridge(address tokenHome, uint8 decimals) internal {
+        TransferrerMessage memory registerMessage = TransferrerMessage({
+            messageType: TransferrerMessageType.REGISTER_REMOTE,
+            payload: abi.encode(
+                RegisterRemoteMessage({
+                    initialReserveImbalance: 0,
+                    homeTokenDecimals: decimals,
+                    remoteTokenDecimals: decimals
+                })
+            )
+        });
+        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
+            tokenHome, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(registerMessage)
+        );
+
+        SendTokensInput memory input = SendTokensInput({
+            destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
+            destinationTokenTransferrerAddress: randomRemoteAddress,
+            recipient: address(this),
+            primaryFeeTokenAddress: WAVAX,
+            primaryFee: 0,
+            secondaryFee: 0,
+            requiredGasLimit: 400_000,
+            multiHopFallback: address(0)
+        });
+        INativeTokenTransferrer(tokenHome).send{value: 1_000_000 * 10 ** decimals}(input);
     }
 
     function fundBridge(address tokenHome, address token, uint8 decimals) internal {

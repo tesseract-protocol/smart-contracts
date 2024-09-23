@@ -20,6 +20,7 @@ struct CellPayload {
  */
 struct Instructions {
     address receiver;
+    bool payableReceiver;
     bytes32 sourceBlockchainId;
     uint256 rollbackTeleporterFee;
     uint256 rollbackGasLimit;
@@ -55,7 +56,9 @@ struct Hop {
 struct BridgePath {
     bool multihop;
     address bridgeSourceChain;
+    bool sourceBridgeIsNative;
     address bridgeDestinationChain;
+    bool destinationBridgeIsNative;
     address cellDestinationChain;
     bytes32 destinationBlockchainId;
     uint256 teleporterFee;
@@ -95,6 +98,10 @@ interface ICell {
         address indexed originSender,
         address token,
         uint256 amount
+    );
+
+    event CellReceivedNativeTokens(
+        bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender
     );
 
     /**

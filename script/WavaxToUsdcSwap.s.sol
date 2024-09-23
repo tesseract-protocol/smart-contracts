@@ -19,8 +19,8 @@ contract WavaxToUsdcSwap is Script {
     address constant USDC_FUJI_HOME = 0x801B217A93b7E6CC4D390dDFA91391083723F060;
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
 
-    address constant CELL_FUJI = 0x357894f83b54EdC0e03F342e0164FcD2Bee78E32;
-    address constant CELL_TES = 0x09f6f221A52d55009e8F843446D466261517Cbf7;
+    address payable constant CELL_FUJI = payable(0x357894f83b54EdC0e03F342e0164FcD2Bee78E32);
+    address payable constant CELL_TES = payable(0x09f6f221A52d55009e8F843446D466261517Cbf7);
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
@@ -61,7 +61,9 @@ contract WavaxToUsdcSwap is Script {
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
+                destinationBridgeIsNative: false,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_FUJI,
                 destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
@@ -76,7 +78,9 @@ contract WavaxToUsdcSwap is Script {
             trade: trade,
             bridgePath: BridgePath({
                 multihop: false,
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: USDC_FUJI_HOME,
+                destinationBridgeIsNative: false,
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
@@ -90,6 +94,7 @@ contract WavaxToUsdcSwap is Script {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: HOP_GAS_ESTIMATE,
             receiver: vm.addr(privateKey),
+            payableReceiver: true,
             hops: hops
         });
 
