@@ -31,7 +31,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     }
 
     receive() external payable {
-        require(msg.sender == address(wrappedNativeToken), "Not WAVAX");
+        if (msg.sender != address(wrappedNativeToken)) revert InvalidSender();
     }
 
     /**

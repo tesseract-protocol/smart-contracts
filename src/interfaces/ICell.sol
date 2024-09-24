@@ -124,6 +124,8 @@ interface ICell {
     error RollbackFailedInvalidFee();
     error InvalidAmount();
 
+    error InvalidSender();
+
     /**
      * @notice Initiates a cross-chain swap operation
      * @dev This function starts the process of a cross-chain token swap.
