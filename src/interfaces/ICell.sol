@@ -127,6 +127,8 @@ interface ICell {
      */
     event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
+    error InvalidSender();
+
     /**
      * @notice Initiates a cross-chain swap operation
      * @dev This function starts the process of a cross-chain token swap.
