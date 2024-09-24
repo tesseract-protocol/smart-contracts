@@ -24,8 +24,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
      * @param instructions The instructions for the cross-chain swap
      */
     function initiate(address token, uint256 amount, Instructions calldata instructions) external override {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
         emit Initiated(msg.sender, token, amount);
-        require(amount > 0, "Invalid amount");
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
         _route(token, amount, payload);
