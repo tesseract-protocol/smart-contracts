@@ -39,13 +39,11 @@ contract SwapRollback is Script {
             recipientGasLimit: 2_500_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
-                sourceBridgeIsNative: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
                 destinationBridgeIsNative: false,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_DESTINATION_CHAIN,
-                destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
+                destinationBlockchainID: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
@@ -56,13 +54,11 @@ contract SwapRollback is Script {
             recipientGasLimit: 0,
             trade: abi.encode(trade),
             bridgePath: BridgePath({
-                multihop: false,
-                sourceBridgeIsNative: false,
                 bridgeSourceChain: USDC_FUJI_HOME,
                 destinationBridgeIsNative: false,
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
-                destinationBlockchainId: TES_BLOCKCHAIN_ID,
+                destinationBlockchainID: TES_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })

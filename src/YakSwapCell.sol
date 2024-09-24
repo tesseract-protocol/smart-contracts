@@ -85,12 +85,12 @@ contract YakSwapCell is Cell {
      * @dev This internal function is called as part of the cross-chain swap process
      * @param token The address of the input token
      * @param amount The amount of input tokens to swap
-     * @param payload The CellPayload containing swap instructions
+     * @param tradePayload The payload containing swap instructions
      * @return success Boolean indicating if the swap was successful
      * @return tokenOut The address of the output token
      * @return amountOut The amount of output tokens received
      */
-    function _swap(address token, uint256 amount, CellPayload memory payload)
+    function _swap(address token, uint256 amount, bytes memory tradePayload)
         internal
         override
         returns (bool success, address tokenOut, uint256 amountOut)

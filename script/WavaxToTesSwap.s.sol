@@ -59,13 +59,11 @@ contract WavaxToTesSwap is Script {
             recipientGasLimit: gasEstimate + GAS_BUFFER,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
-                sourceBridgeIsNative: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
                 destinationBridgeIsNative: false,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_FUJI,
-                destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
+                destinationBlockchainID: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: teleporterFeeOrigin,
                 secondaryTeleporterFee: 0
             })
@@ -76,8 +74,6 @@ contract WavaxToTesSwap is Script {
             recipientGasLimit: 0,
             trade: trade,
             bridgePath: BridgePath({
-                multihop: false,
-                sourceBridgeIsNative: false,
                 bridgeSourceChain: TES_FUJI_REMOTE,
                 destinationBridgeIsNative: false,
                 bridgeDestinationChain: TES_TES_HOME,
