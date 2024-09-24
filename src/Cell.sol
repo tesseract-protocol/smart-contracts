@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./interfaces/ICell.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
-import "@teleporter/upgrades/TeleporterRegistry.sol";
-import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
+import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./interfaces/ICell.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20TokenTransferrer} from "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
+import {IERC20SendAndCallReceiver} from "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
+import {
+    SendAndCallInput, SendTokensInput
+} from "@avalanche-interchain-token-transfer/interfaces/ITokenTransferrer.sol";
 
 /**
  * @title Cell

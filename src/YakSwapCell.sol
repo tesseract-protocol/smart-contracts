@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./Cell.sol";
-import "./interfaces/IYakRouter.sol";
+import {Cell} from "./Cell.sol";
+import {CellPayload} from "./interfaces/ICell.sol";
+import {IYakRouter, FormattedOffer, Trade} from "./interfaces/IYakRouter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title YakSwapCell

@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import "./BaseTest.t.sol";
+import "./../src/interfaces/ICell.sol";
 import "./../src/HopOnlyCell.sol";
 
 contract HopOnlyCellTest is BaseTest {
