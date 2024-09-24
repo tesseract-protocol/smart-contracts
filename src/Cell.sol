@@ -51,7 +51,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory cellPayload = abi.decode(payload, (CellPayload));
         cellPayload.hop++;
-        _route(token, amount, cellPayload);
+        if (cellPayload.hop < cellPayload.instructions.hops.length) {
+            _route(token, amount, cellPayload);
+        } else {
+            revert InvalidPayload();
+        }
     }
 
     /**
