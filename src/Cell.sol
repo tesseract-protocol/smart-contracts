@@ -5,7 +5,6 @@ import "./interfaces/ICell.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
-import "@teleporter/upgrades/TeleporterRegistry.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
 
 /**
