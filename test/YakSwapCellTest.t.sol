@@ -17,26 +17,25 @@ contract YakSwapCellTest is BaseTest {
 
         vm.assertGt(decodedTrade.amountOut, 0);
 
-        Hop[] memory hops = new Hop[](2);
-        hops[1] = Hop({
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
             action: Action.SwapAndTransfer,
             gasLimit: 450_000 + gasEstimate,
             trade: trade,
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(0),
                 bridgeDestinationChain: address(0),
                 cellDestinationChain: address(0),
-                destinationBlockchainId: "",
+                destinationBlockchainID: "",
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         mockReceiveTokens(address(cell), amountIn, payload);
 
@@ -46,26 +45,25 @@ contract YakSwapCellTest is BaseTest {
     function test_Hop() public {
         YakSwapCell cell = new YakSwapCell(YAK_SWAP_ROUTER);
 
-        Hop[] memory hops = new Hop[](2);
-        hops[1] = Hop({
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
             action: Action.Hop,
             gasLimit: 450_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(usdcTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -75,26 +73,25 @@ contract YakSwapCellTest is BaseTest {
     function test_HopAndCall() public {
         YakSwapCell cell = new YakSwapCell(YAK_SWAP_ROUTER);
 
-        Hop[] memory hops = new Hop[](2);
-        hops[1] = Hop({
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
             action: Action.HopAndCall,
             gasLimit: 450_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(usdcTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -111,26 +108,25 @@ contract YakSwapCellTest is BaseTest {
 
         vm.assertGt(decodedTrade.amountOut, 0);
 
-        Hop[] memory hops = new Hop[](2);
-        hops[1] = Hop({
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
             action: Action.SwapAndHop,
             gasLimit: 450_000 + gasEstimate,
             trade: trade,
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(wavaxTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();

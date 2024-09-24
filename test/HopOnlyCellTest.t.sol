@@ -14,20 +14,19 @@ contract HopOnlyCellTest is BaseTest {
             gasLimit: 0,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(0),
                 bridgeDestinationChain: address(0),
                 cellDestinationChain: address(0),
-                destinationBlockchainId: "",
+                destinationBlockchainID: "",
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         mockReceiveTokens(address(cell), 1000e6, payload);
 
@@ -43,20 +42,19 @@ contract HopOnlyCellTest is BaseTest {
             gasLimit: 450_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(usdcTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -72,20 +70,19 @@ contract HopOnlyCellTest is BaseTest {
             gasLimit: 450_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(usdcTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -101,20 +98,19 @@ contract HopOnlyCellTest is BaseTest {
             gasLimit: 450_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: address(usdcTokenHome),
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
-                destinationBlockchainId: REMOTE_BLOCKCHAIN_ID,
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
 
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();

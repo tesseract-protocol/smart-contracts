@@ -37,7 +37,7 @@ contract HopOnlyCell is Cell {
      * @return tokenOut Returns the input token address
      * @return amountOut Returns the input amount
      */
-    function _swap(address token, uint256 amount, CellPayload memory)
+    function _swap(address token, uint256 amount, bytes memory)
         internal
         pure
         override

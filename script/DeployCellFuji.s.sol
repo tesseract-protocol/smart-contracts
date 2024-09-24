@@ -9,6 +9,10 @@ contract DeployCellFuji is Script {
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        WarpMessengerMock warp = new WarpMessengerMock();
+        vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
+
         vm.startBroadcast(deployerPrivateKey);
 
         new YakSwapCell(ROUTER);
@@ -17,4 +21,8 @@ contract DeployCellFuji is Script {
     }
 }
 
-// forge script --chain 43113 script/DeployCellFuji.s.sol:DeployCellFuji --rpc-url $FUJI_RPC_URL --broadcast -vvvv
+contract WarpMessengerMock {
+    function getBlockchainID() external returns (bytes32 blockchainID) {}
+}
+
+// forge script --chain 43113 script/DeployCellFuji.s.sol:DeployCellFuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation -vvvv

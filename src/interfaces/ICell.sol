@@ -8,19 +8,18 @@ pragma solidity 0.8.18;
  */
 struct CellPayload {
     Instructions instructions;
-    uint256 hop;
+    bytes32 sourceBlockchainID;
+    address rollbackDestination;
 }
 
 /**
  * @dev Instructions for a cross-chain swap operation
  * @param receiver Address that will receive the final tokens
- * @param sourceBlockchainId Identifier of the source blockchain
  * @param rollbackTeleporterFee Concrete amount of the input token (tokenIn) to be used as fee for rollback operation via Teleporter
  * @param hops Array of Hop structures defining the swap path
  */
 struct Instructions {
     address receiver;
-    bytes32 sourceBlockchainId;
     uint256 rollbackTeleporterFee;
     Hop[] hops;
 }
@@ -45,17 +44,16 @@ struct Hop {
  * @param bridgeSourceChain Address of the bridge on the source chain
  * @param bridgeDestinationChain Address of the bridge on the destination chain
  * @param cellDestinationChain Address of the Cell contract on the destination chain
- * @param destinationBlockchainId Identifier of the destination blockchain
+ * @param destinationBlockchainID Identifier of the destination blockchain
  * @param teleporterFee Concrete amount of tokens to be used as fee for the Teleporter service.
  *        This is in tokenIn if no swap occurred in this hop, or in tokenOut if a swap did occur.
  * @param secondaryTeleporterFee Secondary fee for the Teleporter service. This might be set if multihop is true.
  */
 struct BridgePath {
-    bool multihop;
     address bridgeSourceChain;
     address bridgeDestinationChain;
     address cellDestinationChain;
-    bytes32 destinationBlockchainId;
+    bytes32 destinationBlockchainID;
     uint256 teleporterFee;
     uint256 secondaryTeleporterFee;
 }

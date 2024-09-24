@@ -19,8 +19,8 @@ contract SwapRollback is Script {
     address constant USDC_TES_REMOTE = 0x6598E8dCA0BCA6AcEB41d4E004e5AaDef9B24293;
     IYakRouter constant ROUTER = IYakRouter(0x1e6911E7Eec3b35F9Ebf4183EF6bAbF64d859FF5);
 
-    address constant CELL_DESTINATION_CHAIN = 0x357894f83b54EdC0e03F342e0164FcD2Bee78E32;
-    address constant CELL_SOURCE_CHAIN = 0x09f6f221A52d55009e8F843446D466261517Cbf7;
+    address constant CELL_DESTINATION_CHAIN = 0x2A6A00D8d158D41e91872Fe267b2E230d1a7959D;
+    address constant CELL_SOURCE_CHAIN = 0xDb399144F98c40a8C329516801d4e6DBf141A1f7;
 
     uint256 constant SWAP_AMOUNT_IN = 1e16;
 
@@ -38,11 +38,10 @@ contract SwapRollback is Script {
             gasLimit: 2_500_000,
             trade: "",
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_DESTINATION_CHAIN,
-                destinationBlockchainId: FUJI_BLOCKCHAIN_ID,
+                destinationBlockchainID: FUJI_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
@@ -52,22 +51,17 @@ contract SwapRollback is Script {
             gasLimit: 0,
             trade: abi.encode(trade),
             bridgePath: BridgePath({
-                multihop: false,
                 bridgeSourceChain: USDC_FUJI_HOME,
                 bridgeDestinationChain: USDC_TES_REMOTE,
                 cellDestinationChain: address(0),
-                destinationBlockchainId: TES_BLOCKCHAIN_ID,
+                destinationBlockchainID: TES_BLOCKCHAIN_ID,
                 teleporterFee: 0,
                 secondaryTeleporterFee: 0
             })
         });
 
-        Instructions memory instructions = Instructions({
-            sourceBlockchainId: TES_BLOCKCHAIN_ID,
-            rollbackTeleporterFee: 0,
-            receiver: vm.addr(privateKey),
-            hops: hops
-        });
+        Instructions memory instructions =
+            Instructions({rollbackTeleporterFee: 0, receiver: vm.addr(privateKey), hops: hops});
 
         //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
 
