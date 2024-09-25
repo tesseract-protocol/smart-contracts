@@ -11,10 +11,15 @@ import "@teleporter/upgrades/TeleporterRegistry.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
 import "@avalanche-interchain-token-transfer/interfaces/INativeSendAndCallReceiver.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IWrappedNativeToken.sol";
+import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
+import {TokenRemote} from "@avalanche-interchain-token-transfer/TokenRemote/TokenRemote.sol";
+import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/interfaces/IWarpMessenger.sol";
 
 /**
  * @title Cell
- * @dev Abstract contract for cross-chain token swaps and transfers
+ * @dev Abstract contract for facilitating cross-chain token swaps and transfers
+ * This contract implements the core functionality for cross-chain operations,
+ * including token swaps, transfers, and multi-hop transactions.
  */
 abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver {
     using SafeERC20 for IERC20;
@@ -23,16 +28,24 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
     IWrappedNativeToken wrappedNativeToken;
 
+    bytes32 public immutable blockchainID;
+
     constructor(address wrappedNativeTokenAddress) {
         wrappedNativeToken = IWrappedNativeToken(wrappedNativeTokenAddress);
+        blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
     }
 
+    /**
+     * @dev Fallback function to receive native tokens
+     * @notice Only accepts native tokens from the wrapped native token contract
+     */
     receive() external payable {
         if (msg.sender != address(wrappedNativeToken)) revert InvalidSender();
     }
 
     /**
      * @notice Initiates a cross-chain swap
+     * @dev Transfers tokens from the sender to this contract and initiates the routing process
      * @param token The address of the token to be swapped
      * @param amount The amount of tokens to be swapped
      * @param instructions The instructions for the cross-chain swap
@@ -44,12 +57,17 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     {
         emit InitiatedSwap(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
-        _route(token, amount, payload);
+        CellPayload memory payload = CellPayload({
+            instructions: instructions,
+            rollbackDestination: instructions.hops[0].bridgePath.bridgeSourceChain,
+            sourceBlockchainID: blockchainID
+        });
+        _route(token, amount, payload, address(0), false);
     }
 
     /**
      * @notice Receives tokens from another chain and processes them
+     * @dev Handles the receipt of ERC20 tokens from cross-chain transfers
      * @param sourceBlockchainID The ID of the source blockchain
      * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
      * @param originSenderAddress The address of the sender on the origin chain
@@ -67,9 +85,20 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     ) external override {
         emit CellReceivedTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        _receiveTokens(token, amount, payload);
+        _receiveTokens(sourceBlockchainID, originTokenTransferrerAddress, token, amount, false, payload);
     }
 
+    /**
+     * @notice Receives native tokens from another chain and processes them
+     * @dev Handles the receipt of native tokens from cross-chain transfers.
+     * The received native tokens are immediately wrapped into the equivalent ERC20 token
+     * to streamline the routing process. This allows for consistent handling of both
+     * native and non-native tokens in subsequent operations.
+     * @param sourceBlockchainID The ID of the source blockchain
+     * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
+     * @param originSenderAddress The address of the sender on the origin chain
+     * @param payload The payload containing instructions for further processing
+     */
     function receiveTokens(
         bytes32 sourceBlockchainID,
         address originTokenTransferrerAddress,
@@ -77,17 +106,41 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         bytes calldata payload
     ) external payable override {
         emit CellReceivedNativeTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress);
-        _receiveTokens(address(0), msg.value, payload);
+        wrappedNativeToken.deposit{value: msg.value}();
+        _receiveTokens(
+            sourceBlockchainID, originTokenTransferrerAddress, address(wrappedNativeToken), msg.value, true, payload
+        );
     }
 
-    function _receiveTokens(address token, uint256 amount, bytes calldata payload) internal {
+    /**
+     * @notice Internal function to process received tokens
+     * @dev Decodes the payload and routes the tokens accordingly
+     * @param sourceBlockchainID The ID of the source blockchain
+     * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
+     * @param token The address of the received token
+     * @param amount The amount of tokens received
+     * @param receivedNative Boolean indicating if native tokens were received
+     * @param payload The payload containing instructions for further processing
+     */
+    function _receiveTokens(
+        bytes32 sourceBlockchainID,
+        address originTokenTransferrerAddress,
+        address token,
+        uint256 amount,
+        bool receivedNative,
+        bytes calldata payload
+    ) internal {
         CellPayload memory cellPayload = abi.decode(payload, (CellPayload));
-        cellPayload.hop++;
-        _route(token, amount, cellPayload);
+        address rollbackBridge = (
+            sourceBlockchainID == cellPayload.sourceBlockchainID
+                && originTokenTransferrerAddress == cellPayload.rollbackDestination
+        ) ? msg.sender : address(0);
+        _route(token, amount, cellPayload, rollbackBridge, receivedNative);
     }
 
     /**
      * @notice Calculates the route for a token swap
+     * @dev This function should be implemented by the derived contract
      * @param amountIn The amount of input tokens
      * @param tokenIn The address of the input token
      * @param tokenOut The address of the output token
@@ -103,7 +156,8 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Performs a token swap
-     * @dev IMPORTANT: This function should use proper exception handling to manage errors.
+     * @dev This function should be implemented by the derived contract.
+     * IMPORTANT: This function should use proper exception handling to manage errors.
      * Use try/catch blocks to handle exceptions that may occur during the swap process.
      * Indicate success or failure through the success return parameter.
      * If an exception occurs or the swap fails for any reason:
@@ -115,59 +169,52 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * potentially enabling rollbacks or other recovery mechanisms.
      * @param token The address of the input token
      * @param amount The amount of input tokens
-     * @param payload The payload containing swap instructions
+     * @param tradePayload The payload containing swap instructions
      * @return success Whether the swap was successful (true) or failed (false)
      * @return tokenOut The address of the output token (or address(0) if swap failed)
      * @return amountOut The amount of output tokens (or 0 if swap failed)
      */
-    function _swap(address token, uint256 amount, CellPayload memory payload)
+    function _swap(address token, uint256 amount, bytes memory tradePayload)
         internal
         virtual
         returns (bool success, address tokenOut, uint256 amountOut);
 
     /**
      * @notice Routes the tokens based on the provided payload
+     * @dev Handles swapping, transferring, and sending tokens across chains
      * @param token The address of the token to route
      * @param amount The amount of tokens to route
      * @param payload The payload containing routing instructions
+     * @param rollbackBridge The address of the bridge to use for rollbacks
+     * @param rollbackNative Boolean indicating if the rollback should use native tokens
      */
-    function _route(address token, uint256 amount, CellPayload memory payload) internal {
-        Hop memory hop = payload.instructions.hops[payload.hop];
-
-        // Wrap native input in case of a swap and/or if the next bridge isn't native.
-        if (
-            token == address(0)
-                && (
-                    !hop.bridgePath.sourceBridgeIsNative || hop.action == Action.SwapAndTransfer
-                        || hop.action == Action.SwapAndHop
-                )
-        ) {
-            wrappedNativeToken.deposit{value: amount}();
-            token = address(wrappedNativeToken);
-        }
+    function _route(
+        address token,
+        uint256 amount,
+        CellPayload memory payload,
+        address rollbackBridge,
+        bool rollbackNative
+    ) internal {
+        Hop memory hop = payload.instructions.hops[0];
 
         if (hop.action == Action.SwapAndTransfer || hop.action == Action.SwapAndHop) {
-            (bool success, address tokenOut, uint256 amountOut) = _trySwap(token, amount, payload);
-            if (!success) return;
-            token = tokenOut;
-            amount = amountOut;
-        }
-
-        if (
-            token == address(wrappedNativeToken)
-                && (
-                    (hop.action == Action.SwapAndTransfer && payload.instructions.payableReceiver)
-                        || hop.bridgePath.sourceBridgeIsNative
-                )
-        ) {
-            wrappedNativeToken.withdraw(amount);
+            (bool success, address tokenOut, uint256 amountOut) =
+                _swap(token, amount, payload.instructions.hops[0].trade);
+            if (success) {
+                token = tokenOut;
+                amount = amountOut;
+            } else if (rollbackBridge != address(0) && payload.instructions.rollbackTeleporterFee < amount) {
+                _rollback(token, amount, payload, rollbackBridge, rollbackNative);
+                return;
+            } else {
+                revert SwapAndRollbackFailed();
+            }
         }
 
         if (hop.action == Action.SwapAndTransfer) {
             _transfer(token, amount, payload);
         } else if (
-            hop.action == Action.Hop
-                || (hop.action == Action.SwapAndHop && payload.hop == payload.instructions.hops.length - 1)
+            hop.action == Action.Hop || (hop.action == Action.SwapAndHop && payload.instructions.hops.length == 1)
         ) {
             _send(token, amount, payload);
         } else {
@@ -176,40 +223,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     }
 
     /**
-     * @notice Attempts to perform a swap and handles failures
-     * @param token The address of the input token
-     * @param amount The amount of input tokens
-     * @param payload The payload containing swap instructions
-     * @return success Whether the swap was successful
-     * @return tokenOut The address of the output token
-     * @return amountOut The amount of output tokens
+     * @notice Transfers tokens to the specified receiver
+     * @dev Handles both ERC20 and native token transfers
+     * @param token The address of the token to transfer
+     * @param amount The amount of tokens to transfer
+     * @param payload The payload containing transfer instructions
      */
-    function _trySwap(address token, uint256 amount, CellPayload memory payload)
-        internal
-        returns (bool success, address tokenOut, uint256 amountOut)
-    {
-        (success, tokenOut, amountOut) = _swap(token, amount, payload);
-        if (success) return (success, tokenOut, amountOut);
-
-        emit SwapFailed(token, amount, tokenOut, amountOut);
-
-        if (payload.hop == 1) {
-            require(payload.instructions.rollbackTeleporterFee < amount, "Invalid rollback fee");
-            if (
-                token == address(wrappedNativeToken)
-                    && payload.instructions.hops[0].bridgePath.destinationBridgeIsNative
-            ) {
-                wrappedNativeToken.withdraw(amount);
-            }
-            _rollback(token, amount, payload);
-            return (false, address(0), 0);
-        } else {
-            revert("Swap failed");
-        }
-    }
-
     function _transfer(address token, uint256 amount, CellPayload memory payload) internal {
         if (token == address(wrappedNativeToken) && payload.instructions.payableReceiver) {
+            wrappedNativeToken.withdraw(amount);
             payable(payload.instructions.receiver).sendValue(amount);
         } else {
             IERC20(token).safeTransfer(payload.instructions.receiver, amount);
@@ -218,26 +240,35 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Sends tokens to another chain and calls a contract
+     * @dev Handles the cross-chain transfer and contract call
      * @param token The address of the token to send
      * @param amount The amount of tokens to send
      * @param payload The payload containing transfer instructions
      */
     function _sendAndCall(address token, uint256 amount, CellPayload memory payload) internal {
-        Hop memory hop = payload.instructions.hops[payload.hop];
+        Hop memory hop = payload.instructions.hops[0];
+
+        Hop[] memory hops = new Hop[](payload.instructions.hops.length - 1);
+        for (uint256 i = 0; i < payload.instructions.hops.length - 1; i++) {
+            hops[i] = payload.instructions.hops[i + 1];
+        }
+        payload.instructions.hops = hops;
+
         SendAndCallInput memory input = SendAndCallInput({
-            destinationBlockchainID: hop.bridgePath.destinationBlockchainId,
+            destinationBlockchainID: hop.bridgePath.destinationBlockchainID,
             destinationTokenTransferrerAddress: hop.bridgePath.bridgeDestinationChain,
             recipientContract: hop.bridgePath.cellDestinationChain,
             recipientPayload: abi.encode(payload),
             requiredGasLimit: hop.gasLimit + GAS_LIMIT_BRIDGE_HOP,
             recipientGasLimit: hop.gasLimit,
-            multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0),
+            multiHopFallback: _isMultiHop(hop) ? payload.instructions.receiver : address(0),
             fallbackRecipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: hop.bridgePath.secondaryTeleporterFee
         });
         if (hop.bridgePath.sourceBridgeIsNative) {
+            wrappedNativeToken.withdraw(amount);
             INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall{value: amount}(input);
         } else {
             IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
@@ -249,23 +280,25 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Sends tokens to another chain
+     * @dev Handles the cross-chain transfer
      * @param token The address of the token to send
      * @param amount The amount of tokens to send
      * @param payload The payload containing transfer instructions
      */
     function _send(address token, uint256 amount, CellPayload memory payload) internal {
-        Hop memory hop = payload.instructions.hops[payload.hop];
+        Hop memory hop = payload.instructions.hops[0];
         SendTokensInput memory input = SendTokensInput({
-            destinationBlockchainID: hop.bridgePath.destinationBlockchainId,
+            destinationBlockchainID: hop.bridgePath.destinationBlockchainID,
             destinationTokenTransferrerAddress: hop.bridgePath.bridgeDestinationChain,
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: hop.bridgePath.secondaryTeleporterFee,
-            requiredGasLimit: hop.gasLimit + GAS_LIMIT_BRIDGE_HOP,
-            multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
+            requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
+            multiHopFallback: _isMultiHop(hop) ? payload.instructions.receiver : address(0)
         });
         if (hop.bridgePath.sourceBridgeIsNative) {
+            wrappedNativeToken.withdraw(amount);
             INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).send{value: amount}(input);
         } else {
             IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
@@ -273,10 +306,45 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         }
     }
 
-    function _rollback(address token, uint256 amount, CellPayload memory payload) internal {
+    /**
+     * @notice Checks if the current hop is part of a multi-hop transaction
+     * @dev Attempts to retrieve the token home blockchain ID to determine if it's a multi-hop
+     * @param hop The current hop information
+     * @return bool True if it's a multi-hop transaction, false otherwise
+     */
+    function _isMultiHop(Hop memory hop) internal view returns (bool) {
+        try TokenRemote(hop.bridgePath.bridgeSourceChain).tokenHomeBlockchainID() returns (
+            bytes32 tokenHomeBlockChainID
+        ) {
+            return tokenHomeBlockChainID != hop.bridgePath.destinationBlockchainID;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * @notice Performs a rollback of the transaction
+     * @dev This function is called when a swap or transfer fails and needs to be reversed.
+     * It sends tokens back to the original chain using the specified rollback bridge.
+     * The function handles both native and non-native token rollbacks.
+     * @notice The rollback amount sent back is the original amount minus the rollbackTeleporterFee
+     * @notice For native token rollbacks, the full amount is sent in the transaction value, but the fee is handled by the bridge
+     * @param token The address of the token to rollback
+     * @param amount The total amount of tokens to rollback (including fees)
+     * @param payload The CellPayload containing rollback instructions and original transaction details
+     * @param rollbackBridge The address of the bridge contract to use for the rollback
+     * @param rollbackNative A boolean flag indicating whether to rollback native tokens (true) or ERC20 tokens (false)
+     */
+    function _rollback(
+        address token,
+        uint256 amount,
+        CellPayload memory payload,
+        address rollbackBridge,
+        bool rollbackNative
+    ) internal {
         SendTokensInput memory input = SendTokensInput({
-            destinationBlockchainID: payload.instructions.sourceBlockchainId,
-            destinationTokenTransferrerAddress: payload.instructions.hops[0].bridgePath.bridgeSourceChain,
+            destinationBlockchainID: payload.sourceBlockchainID,
+            destinationTokenTransferrerAddress: payload.rollbackDestination,
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: payload.instructions.rollbackTeleporterFee,
@@ -284,15 +352,12 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: address(0)
         });
-        if (payload.instructions.hops[0].bridgePath.destinationBridgeIsNative) {
-            INativeTokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send{value: amount}(
-                input
-            );
+        if (rollbackNative) {
+            wrappedNativeToken.withdraw(amount);
+            INativeTokenTransferrer(rollbackBridge).send{value: amount}(input);
         } else {
-            IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
-            IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(
-                input, amount - payload.instructions.rollbackTeleporterFee
-            );
+            IERC20(token).approve(rollbackBridge, amount);
+            IERC20TokenTransferrer(rollbackBridge).send(input, amount - payload.instructions.rollbackTeleporterFee);
         }
         emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
     }

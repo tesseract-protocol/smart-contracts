@@ -3,25 +3,26 @@ pragma solidity 0.8.18;
 
 /**
  * @dev Payload structure for Cell operations
- * @param instructions Detailed instructions for the operation
- * @param hop Current hop count in the operation sequence
+ * @param instructions Detailed instructions for the cross-chain operation
+ * @param sourceBlockchainID Identifier of the blockchain where the operation originated
+ * @param rollbackDestination Address to send tokens to in case of a rollback
  */
 struct CellPayload {
     Instructions instructions;
-    uint256 hop;
+    bytes32 sourceBlockchainID;
+    address rollbackDestination;
 }
 
 /**
  * @dev Instructions for a cross-chain swap operation
  * @param receiver Address that will receive the final tokens
- * @param sourceBlockchainId Identifier of the source blockchain
- * @param rollbackTeleporterFee Concrete amount of the input token (tokenIn) to be used as fee for rollback operation via Teleporter
+ * @param payableReceiver Boolean indicating if the receiver can accept native tokens
+ * @param rollbackTeleporterFee Amount of the input token (tokenIn) to be used as fee for rollback operation via Teleporter
  * @param hops Array of Hop structures defining the swap path
  */
 struct Instructions {
     address receiver;
     bool payableReceiver;
-    bytes32 sourceBlockchainId;
     uint256 rollbackTeleporterFee;
     Hop[] hops;
 }
@@ -42,33 +43,31 @@ struct Hop {
 
 /**
  * @dev Defines the path for bridging tokens between chains
- * @param multihop Indicates if multihop should be used in this hop. If true, secondaryTeleporterFee might be set.
  * @param bridgeSourceChain Address of the bridge on the source chain
+ * @param sourceBridgeIsNative Boolean indicating if the source bridge handles native tokens
  * @param bridgeDestinationChain Address of the bridge on the destination chain
  * @param cellDestinationChain Address of the Cell contract on the destination chain
- * @param destinationBlockchainId Identifier of the destination blockchain
- * @param teleporterFee Concrete amount of tokens to be used as fee for the Teleporter service.
+ * @param destinationBlockchainID Identifier of the destination blockchain
+ * @param teleporterFee Amount of tokens to be used as fee for the Teleporter service.
  *        This is in tokenIn if no swap occurred in this hop, or in tokenOut if a swap did occur.
- * @param secondaryTeleporterFee Secondary fee for the Teleporter service. This might be set if multihop is true.
+ * @param secondaryTeleporterFee Secondary fee for the Teleporter service. This might be set in multihop scenarios.
  */
 struct BridgePath {
-    bool multihop;
     address bridgeSourceChain;
     bool sourceBridgeIsNative;
     address bridgeDestinationChain;
-    bool destinationBridgeIsNative;
     address cellDestinationChain;
-    bytes32 destinationBlockchainId;
+    bytes32 destinationBlockchainID;
     uint256 teleporterFee;
     uint256 secondaryTeleporterFee;
 }
 
 /**
  * @dev Enumeration of possible actions in a hop
- * Hop: Simple token transfer between chains
- * HopAndCall: Token transfer followed by a contract call on the destination chain.
- * SwapAndHop: Perform a swap, then transfer to another chain
- * SwapAndTransfer: Perform a swap and transfer tokens to the final receiver
+ * @param Hop Simple token transfer between chains
+ * @param HopAndCall Token transfer followed by a contract call on the destination chain
+ * @param SwapAndHop Perform a swap, then transfer to another chain
+ * @param SwapAndTransfer Perform a swap and transfer tokens to the final receiver
  */
 enum Action {
     Hop,
@@ -76,11 +75,11 @@ enum Action {
     SwapAndHop,
     SwapAndTransfer
 }
+
 /**
  * @title ICell Interface
- * @dev Interface for the Cell contract, defining structures and functions for cross-chain token swaps and transfers
+ * @dev Interface for the Cell contract, defining events, errors, and functions for cross-chain token swaps and transfers
  */
-
 interface ICell {
     /**
      * @dev Emitted when tokens are received by the Cell contract
@@ -98,6 +97,12 @@ interface ICell {
         uint256 amount
     );
 
+    /**
+     * @dev Emitted when native tokens are received by the Cell contract
+     * @param sourceBlockchainID Identifier of the source blockchain
+     * @param sourceBridge Address of the bridge on the source chain
+     * @param originSender Address of the original sender
+     */
     event CellReceivedNativeTokens(
         bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender
     );
@@ -111,15 +116,6 @@ interface ICell {
     event InitiatedSwap(address indexed sender, address indexed tokenIn, uint256 amountIn);
 
     /**
-     * @dev Emitted when a swap operation fails
-     * @param tokenIn Address of the input token
-     * @param amountIn Amount of input tokens
-     * @param tokenOut Address of the intended output token
-     * @param amountOut Amount of output tokens (likely 0 in case of failure)
-     */
-    event SwapFailed(address indexed tokenIn, uint256 amountIn, address indexed tokenOut, uint256 amountOut);
-
-    /**
      * @dev Emitted when a rollback operation is performed
      * @param receiver Address receiving the rolled-back tokens
      * @param token Address of the token being rolled back
@@ -127,13 +123,25 @@ interface ICell {
      */
     event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
+    /**
+     * @dev Error thrown when an invalid sender tries to interact with the contract
+     */
     error InvalidSender();
+
+    /**
+     * @dev Error thrown when both the swap operation and the subsequent rollback attempt fail
+     * This error indicates a critical failure in the system where not only did the initial
+     * swap fail, but the safety mechanism (rollback) also failed to execute properly
+     */
+    error SwapAndRollbackFailed();
 
     /**
      * @notice Initiates a cross-chain swap operation
      * @dev This function starts the process of a cross-chain token swap.
-     * It should transfer the specified tokens from the caller to the contract,
-     * then initiate the swap process according to the provided instructions.
+     * It transfers the specified tokens from the caller to the contract,
+     * then initiates the swap process according to the provided instructions.
+     * If the swap fails, a rollback will be attempted. If both the swap and rollback fail,
+     * the SwapAndRollbackFailed error will be thrown.
      * @param token Address of the token to be swapped
      * @param amount Amount of tokens to be swapped
      * @param instructions Detailed instructions for the swap operation
