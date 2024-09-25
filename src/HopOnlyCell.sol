@@ -9,6 +9,8 @@ import "./Cell.sol";
  * This contract is useful for scenarios where tokens need to be transferred across chains without any exchange
  */
 contract HopOnlyCell is Cell {
+    constructor(address wrappedNativeToken) Cell(wrappedNativeToken) {}
+
     /**
      * @notice Placeholder function for routing logic
      * @dev This function is required by the Cell interface but is not used in HopOnlyCell
@@ -37,7 +39,7 @@ contract HopOnlyCell is Cell {
      * @return tokenOut Returns the input token address
      * @return amountOut Returns the input amount
      */
-    function _swap(address token, uint256 amount, CellPayload memory)
+    function _swap(address token, uint256 amount, bytes memory)
         internal
         pure
         override
