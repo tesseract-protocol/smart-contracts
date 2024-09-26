@@ -141,7 +141,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         if (success) return (success, tokenOut, amountOut);
 
         if (payload.hop == 1) {
-            if (payload.instructions.rollbackTeleporterFee > amount) {
+            if (payload.instructions.rollbackTeleporterFee >= amount) {
                 revert RollbackFailedInvalidFee();
             }
             SendTokensInput memory input = SendTokensInput({
