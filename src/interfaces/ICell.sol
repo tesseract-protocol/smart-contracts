@@ -111,6 +111,8 @@ interface ICell {
      */
     event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
+    error SwapFailed();
+    error RollbackFailedInvalidFee();
     error InvalidAmount();
 
     /**

@@ -145,7 +145,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
         if (success) return (success, tokenOut, amountOut);
 
         if (payload.hop == 1) {
-            require(payload.instructions.rollbackTeleporterFee < amount, "Invalid fee");
+            if (payload.instructions.rollbackTeleporterFee >= amount) {
+                revert RollbackFailedInvalidFee();
+            }
             SendTokensInput memory input = SendTokensInput({
                 destinationBlockchainID: payload.instructions.sourceBlockchainId,
                 destinationTokenTransferrerAddress: payload.instructions.hops[0].bridgePath.bridgeSourceChain,
@@ -163,7 +165,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
             emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
             return (false, address(0), 0);
         } else {
-            revert("Swap failed");
+            revert SwapFailed();
         }
     }
 
