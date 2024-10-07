@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import "./BaseTest.t.sol";
+import "./../src/interfaces/ICell.sol";
 import "./../src/YakSwapCell.sol";
 
 contract YakSwapCellTest is BaseTest {
@@ -11,11 +12,12 @@ contract YakSwapCellTest is BaseTest {
         YakSwapCell cell = new YakSwapCell(YAK_SWAP_ROUTER);
 
         uint256 amountIn = 1000e6;
-        YakSwapCell.Extras memory extras = YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100});
+        YakSwapCell.Extras memory extras =
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, WAVAX, abi.encode(extras));
-        Trade memory decodedTrade = abi.decode(trade, (Trade));
+        YakSwapCell.TradeData memory tradeData = abi.decode(trade, (YakSwapCell.TradeData));
 
-        vm.assertGt(decodedTrade.amountOut, 0);
+        vm.assertGt(tradeData.trade.amountOut, 0);
 
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({
@@ -40,7 +42,7 @@ contract YakSwapCellTest is BaseTest {
 
         mockReceiveTokens(address(cell), amountIn, payload);
 
-        vm.assertApproxEqRel(IERC20(WAVAX).balanceOf(vm.addr(123)), decodedTrade.amountOut, 0.1e18);
+        vm.assertApproxEqRel(IERC20(WAVAX).balanceOf(vm.addr(123)), tradeData.trade.amountOut, 0.1e18);
     }
 
     function test_Hop() public {
@@ -105,11 +107,12 @@ contract YakSwapCellTest is BaseTest {
         YakSwapCell cell = new YakSwapCell(YAK_SWAP_ROUTER);
 
         uint256 amountIn = 1000e6;
-        YakSwapCell.Extras memory extras = YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100});
+        YakSwapCell.Extras memory extras =
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, WAVAX, abi.encode(extras));
-        Trade memory decodedTrade = abi.decode(trade, (Trade));
+        YakSwapCell.TradeData memory tradeData = abi.decode(trade, (YakSwapCell.TradeData));
 
-        vm.assertGt(decodedTrade.amountOut, 0);
+        vm.assertGt(tradeData.trade.amountOut, 0);
 
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({

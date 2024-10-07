@@ -1,24 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./Cell.sol";
-import "./interfaces/IYakRouter.sol";
+import {Cell} from "./Cell.sol";
+import {CellPayload} from "./interfaces/ICell.sol";
+import {IYakRouter, FormattedOffer, Trade} from "./interfaces/IYakRouter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title YakSwapCell
  * @dev A concrete implementation of the Cell contract for cross-chain swaps using the YakRouter
  */
 contract YakSwapCell is Cell {
+    using SafeERC20 for IERC20;
     /**
      * @dev Additional parameters for the YakRouter swap
      * @param maxSteps Maximum number of steps in the swap path
      * @param gasPrice Gas price to be used for gas estimation
      * @param slippageBips Slippage tolerance in basis points (1 bip = 0.01%)
      */
+
     struct Extras {
         uint256 maxSteps;
         uint256 gasPrice;
         uint256 slippageBips;
+        uint256 yakSwapFee;
+    }
+
+    struct TradeData {
+        Trade trade;
+        uint256 yakSwapFee;
     }
 
     uint256 public constant BIPS_DIVISOR = 10_000;
@@ -55,14 +65,17 @@ contract YakSwapCell is Cell {
         Extras memory extras = abi.decode(data, (Extras));
         FormattedOffer memory offer =
             router.findBestPathWithGas(amountIn, tokenIn, tokenOut, extras.maxSteps, extras.gasPrice);
-        trade = abi.encode(
-            Trade({
+
+        TradeData memory tradeData = TradeData({
+            trade: Trade({
                 amountIn: offer.amounts[0],
                 amountOut: (offer.amounts[offer.amounts.length - 1] * (BIPS_DIVISOR - extras.slippageBips)) / BIPS_DIVISOR,
                 path: offer.path,
                 adapters: offer.adapters
-            })
-        );
+            }),
+            yakSwapFee: extras.yakSwapFee
+        });
+        trade = abi.encode(tradeData);
         gasEstimate = offer.gasEstimate;
     }
 
@@ -81,14 +94,17 @@ contract YakSwapCell is Cell {
         override
         returns (bool success, address tokenOut, uint256 amountOut)
     {
-        Trade memory trade = abi.decode(payload.instructions.hops[payload.hop].trade, (Trade));
-        tokenOut = trade.path.length > 0 ? trade.path[trade.path.length - 1] : address(0);
+        TradeData memory tradeData = abi.decode(payload.instructions.hops[payload.hop].trade, (TradeData));
+
+        tokenOut = tradeData.trade.path.length > 0 ? tradeData.trade.path[tradeData.trade.path.length - 1] : address(0);
         if (tokenOut == address(0)) {
             return (false, address(0), 0);
         }
-        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
-        IERC20(token).approve(address(router), amount);
-        try IYakRouter(router).swapNoSplit(trade, address(this), 0) {
+        uint256 balanceBefore = token == tokenOut
+            ? IERC20(tokenOut).balanceOf(address(this)) - amount
+            : IERC20(tokenOut).balanceOf(address(this));
+        IERC20(token).forceApprove(address(router), amount);
+        try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFee) {
             success = true;
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
         } catch {
