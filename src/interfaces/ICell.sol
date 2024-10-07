@@ -109,7 +109,7 @@ interface ICell {
      * @param token Address of the token being rolled back
      * @param amount Amount of tokens being rolled back
      */
-    event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
+    event Rollback(address indexed receiver, address indexed token, uint256 amount);
 
     error SwapFailed();
     error RollbackFailedInvalidFee();
