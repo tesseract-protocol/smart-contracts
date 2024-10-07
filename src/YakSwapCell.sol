@@ -19,6 +19,12 @@ contract YakSwapCell is Cell {
         uint256 maxSteps;
         uint256 gasPrice;
         uint256 slippageBips;
+        uint256 yakSwapFee;
+    }
+
+    struct TradeData {
+        Trade trade;
+        uint256 yakSwapFee;
     }
 
     uint256 public constant BIPS_DIVISOR = 10_000;
@@ -55,14 +61,17 @@ contract YakSwapCell is Cell {
         Extras memory extras = abi.decode(data, (Extras));
         FormattedOffer memory offer =
             router.findBestPathWithGas(amountIn, tokenIn, tokenOut, extras.maxSteps, extras.gasPrice);
-        trade = abi.encode(
-            Trade({
+
+        TradeData memory tradeData = TradeData({
+            trade: Trade({
                 amountIn: offer.amounts[0],
                 amountOut: (offer.amounts[offer.amounts.length - 1] * (BIPS_DIVISOR - extras.slippageBips)) / BIPS_DIVISOR,
                 path: offer.path,
                 adapters: offer.adapters
-            })
-        );
+            }),
+            yakSwapFee: extras.yakSwapFee
+        });
+        trade = abi.encode(tradeData);
         gasEstimate = offer.gasEstimate;
     }
 
@@ -81,14 +90,15 @@ contract YakSwapCell is Cell {
         override
         returns (bool success, address tokenOut, uint256 amountOut)
     {
-        Trade memory trade = abi.decode(payload.instructions.hops[payload.hop].trade, (Trade));
-        tokenOut = trade.path.length > 0 ? trade.path[trade.path.length - 1] : address(0);
+        TradeData memory tradeData = abi.decode(payload.instructions.hops[payload.hop].trade, (TradeData));
+
+        tokenOut = tradeData.trade.path.length > 0 ? tradeData.trade.path[tradeData.trade.path.length - 1] : address(0);
         if (tokenOut == address(0)) {
             return (false, address(0), 0);
         }
         uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
         IERC20(token).approve(address(router), amount);
-        try IYakRouter(router).swapNoSplit(trade, address(this), 0) {
+        try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFee) {
             success = true;
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
         } catch {
