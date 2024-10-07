@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./interfaces/ICell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20TokenTransferrer} from "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
 import {IERC20SendAndCallReceiver} from "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
 import {
@@ -14,19 +15,22 @@ import {
  * @title Cell
  * @dev Abstract contract for cross-chain token swaps and transfers
  */
-abstract contract Cell is ICell, IERC20SendAndCallReceiver {
+abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
 
     /**
      * @notice Initiates a cross-chain swap
-     * @param token The address of the token to be swapped
-     * @param amount The amount of tokens to be swapped
+     * @param token The address of the token to be swapped/bridged
+     * @param amount The amount of tokens to be swapped/bridged
      * @param instructions The instructions for the cross-chain swap
      */
-    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external override {
-        emit InitiatedSwap(msg.sender, token, amount);
+    function initiate(address token, uint256 amount, Instructions calldata instructions) external override nonReentrant {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+        emit Initiated(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
         _route(token, amount, payload);
@@ -48,7 +52,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         address token,
         uint256 amount,
         bytes calldata payload
-    ) external override {
+    ) external override nonReentrant {
         emit CellReceivedTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory cellPayload = abi.decode(payload, (CellPayload));
@@ -142,10 +146,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         (success, tokenOut, amountOut) = _swap(token, amount, payload);
         if (success) return (success, tokenOut, amountOut);
 
-        emit SwapFailed(token, amount, tokenOut, amountOut);
-
         if (payload.hop == 1) {
-            require(payload.instructions.rollbackTeleporterFee < amount, "Invalid fee");
+            if (payload.instructions.rollbackTeleporterFee >= amount) {
+                revert RollbackFailedInvalidFee();
+            }
             SendTokensInput memory input = SendTokensInput({
                 destinationBlockchainID: payload.instructions.sourceBlockchainId,
                 destinationTokenTransferrerAddress: payload.instructions.hops[0].bridgePath.bridgeSourceChain,
@@ -156,14 +160,14 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
                 requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
                 multiHopFallback: address(0)
             });
-            IERC20(token).approve(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
+            IERC20(token).forceApprove(payload.instructions.hops[0].bridgePath.bridgeDestinationChain, amount);
             IERC20TokenTransferrer(payload.instructions.hops[0].bridgePath.bridgeDestinationChain).send(
                 input, amount - payload.instructions.rollbackTeleporterFee
             );
             emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
             return (false, address(0), 0);
         } else {
-            revert("Swap failed");
+            revert SwapFailed();
         }
     }
 
@@ -186,9 +190,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             fallbackRecipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: hop.bridgePath.secondaryTeleporterFee
+            secondaryFee: hop.bridgePath.multihop ? hop.bridgePath.secondaryTeleporterFee : 0
         });
-        IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
+        IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
             input, amount - hop.bridgePath.teleporterFee
         );
@@ -208,11 +212,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: hop.bridgePath.secondaryTeleporterFee,
+            secondaryFee: hop.bridgePath.multihop ? hop.bridgePath.secondaryTeleporterFee : 0,
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
         });
-        IERC20(token).approve(hop.bridgePath.bridgeSourceChain, amount);
+        IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount - hop.bridgePath.teleporterFee);
     }
 }
