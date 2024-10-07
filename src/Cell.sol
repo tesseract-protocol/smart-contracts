@@ -189,7 +189,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
             fallbackRecipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: hop.bridgePath.secondaryTeleporterFee
+            secondaryFee: hop.bridgePath.multihop ? hop.bridgePath.secondaryTeleporterFee : 0
         });
         IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
         IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
@@ -211,7 +211,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
             recipient: payload.instructions.receiver,
             primaryFeeTokenAddress: token,
             primaryFee: hop.bridgePath.teleporterFee,
-            secondaryFee: hop.bridgePath.secondaryTeleporterFee,
+            secondaryFee: hop.bridgePath.multihop ? hop.bridgePath.secondaryTeleporterFee : 0,
             requiredGasLimit: GAS_LIMIT_BRIDGE_HOP,
             multiHopFallback: hop.bridgePath.multihop ? payload.instructions.receiver : address(0)
         });
