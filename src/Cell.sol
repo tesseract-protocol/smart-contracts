@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import "./interfaces/ICell.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
 import "@teleporter/upgrades/TeleporterRegistry.sol";
 import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
@@ -12,7 +13,7 @@ import "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceive
  * @title Cell
  * @dev Abstract contract for cross-chain token swaps and transfers
  */
-abstract contract Cell is ICell, IERC20SendAndCallReceiver {
+abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 constant GAS_LIMIT_BRIDGE_HOP = 350_000;
@@ -23,7 +24,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
      * @param amount The amount of tokens to be swapped
      * @param instructions The instructions for the cross-chain swap
      */
-    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external override {
+    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions)
+        external
+        override
+        nonReentrant
+    {
         emit InitiatedSwap(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
@@ -46,7 +51,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver {
         address token,
         uint256 amount,
         bytes calldata payload
-    ) external override {
+    ) external override nonReentrant {
         emit CellReceivedTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory cellPayload = abi.decode(payload, (CellPayload));
