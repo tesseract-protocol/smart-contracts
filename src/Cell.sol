@@ -20,16 +20,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
 
     /**
      * @notice Initiates a cross-chain swap
-     * @param token The address of the token to be swapped
-     * @param amount The amount of tokens to be swapped
+     * @param token The address of the token to be swapped/bridged
+     * @param amount The amount of tokens to be swapped/bridged
      * @param instructions The instructions for the cross-chain swap
      */
-    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions)
-        external
-        override
-        nonReentrant
-    {
-        emit InitiatedSwap(msg.sender, token, amount);
+    function initiate(address token, uint256 amount, Instructions calldata instructions) external override nonReentrant {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+        emit Initiated(msg.sender, token, amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
         _route(token, amount, payload);

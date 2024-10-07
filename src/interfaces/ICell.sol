@@ -96,12 +96,12 @@ interface ICell {
     );
 
     /**
-     * @dev Emitted when a cross-chain swap is initiated
-     * @param sender Address initiating the swap
-     * @param tokenIn Address of the input token
-     * @param amountIn Amount of input tokens
+     * @dev Emitted when a cross-chain swap/bridge is initiated
+     * @param sender Address initiating
+     * @param token Address of the input token
+     * @param amount Amount of input tokens
      */
-    event InitiatedSwap(address indexed sender, address indexed tokenIn, uint256 amountIn);
+    event Initiated(address indexed sender, address indexed token, uint256 amount);
 
     /**
      * @dev Emitted when a swap operation fails
@@ -120,6 +120,8 @@ interface ICell {
      */
     event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
+    error InvalidAmount();
+
     /**
      * @notice Initiates a cross-chain swap operation
      * @dev This function starts the process of a cross-chain token swap.
@@ -129,5 +131,5 @@ interface ICell {
      * @param amount Amount of tokens to be swapped
      * @param instructions Detailed instructions for the swap operation
      */
-    function crossChainSwap(address token, uint256 amount, Instructions calldata instructions) external;
+    function initiate(address token, uint256 amount, Instructions calldata instructions) external;
 }

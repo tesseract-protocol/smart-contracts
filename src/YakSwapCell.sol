@@ -98,7 +98,9 @@ contract YakSwapCell is Cell {
         if (tokenOut == address(0)) {
             return (false, address(0), 0);
         }
-        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
+        uint256 balanceBefore = token == tokenOut
+            ? IERC20(tokenOut).balanceOf(address(this)) - amount
+            : IERC20(tokenOut).balanceOf(address(this));
         IERC20(token).forceApprove(address(router), amount);
         try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFee) {
             success = true;

@@ -69,12 +69,10 @@ contract SwapRollback is Script {
             hops: hops
         });
 
-        //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
-
         vm.startBroadcast(privateKey);
 
         IERC20(WAVAX_TES_REMOTE).approve(CELL_SOURCE_CHAIN, SWAP_AMOUNT_IN);
-        Cell(CELL_SOURCE_CHAIN).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
+        Cell(CELL_SOURCE_CHAIN).initiate(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN, instructions);
 
         vm.stopBroadcast();
     }
