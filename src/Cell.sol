@@ -144,8 +144,6 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, ReentrancyGuard {
         (success, tokenOut, amountOut) = _swap(token, amount, payload);
         if (success) return (success, tokenOut, amountOut);
 
-        emit SwapFailed(token, amount, tokenOut, amountOut);
-
         if (payload.hop == 1) {
             require(payload.instructions.rollbackTeleporterFee < amount, "Invalid fee");
             SendTokensInput memory input = SendTokensInput({

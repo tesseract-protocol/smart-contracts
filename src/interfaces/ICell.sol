@@ -104,15 +104,6 @@ interface ICell {
     event Initiated(address indexed sender, address indexed token, uint256 amount);
 
     /**
-     * @dev Emitted when a swap operation fails
-     * @param tokenIn Address of the input token
-     * @param amountIn Amount of input tokens
-     * @param tokenOut Address of the intended output token
-     * @param amountOut Amount of output tokens (likely 0 in case of failure)
-     */
-    event SwapFailed(address indexed tokenIn, uint256 amountIn, address indexed tokenOut, uint256 amountOut);
-
-    /**
      * @dev Emitted when a rollback operation is performed
      * @param receiver Address receiving the rolled-back tokens
      * @param token Address of the token being rolled back
