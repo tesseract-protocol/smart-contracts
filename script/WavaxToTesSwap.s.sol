@@ -41,12 +41,12 @@ contract WavaxToTesSwap is Script {
         vm.selectFork(fujiForkId);
 
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 1, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS});
+            YakSwapCell.Extras({maxSteps: 1, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS, yakSwapFee: 0});
         (bytes memory trade, uint256 gasEstimate) =
             YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, TES_FUJI_REMOTE, abi.encode(extras));
 
-        Trade memory encodedTrade = abi.decode(trade, (Trade));
-        console.log("AMOUNT OUT %d", encodedTrade.amountOut);
+        YakSwapCell.TradeData memory tradeData = abi.decode(trade, (YakSwapCell.TradeData));
+        console.log("AMOUNT OUT %d", tradeData.trade.amountOut);
 
         vm.selectFork(tesForkId);
 
@@ -79,7 +79,7 @@ contract WavaxToTesSwap is Script {
                 bridgeDestinationChain: TES_TES_HOME,
                 cellDestinationChain: address(0),
                 destinationBlockchainId: TES_BLOCKCHAIN_ID,
-                teleporterFee: (encodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
+                teleporterFee: (tradeData.trade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
                 secondaryTeleporterFee: 0
             })
         });
@@ -92,15 +92,13 @@ contract WavaxToTesSwap is Script {
             hops: hops
         });
 
-        //console.log(vm.toString(abi.encodeWithSelector(Initiator.crossChainSwap.selector, swapData)));
-
         WarpMessengerMock warp = new WarpMessengerMock();
         vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
 
         vm.startBroadcast(privateKey);
 
         IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN + teleporterFeeOrigin);
-        Cell(CELL_TES).crossChainSwap(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
+        Cell(CELL_TES).initiate(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
 
         vm.stopBroadcast();
     }
