@@ -12,7 +12,8 @@ contract HopOnlyCellTest is BaseTest {
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({
             action: Action.SwapAndTransfer,
-            gasLimit: 0,
+            requiredGasLimit: 450_000,
+            recipientGasLimit: 0,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -25,8 +26,13 @@ contract HopOnlyCellTest is BaseTest {
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({
+            sourceBlockchainId: "",
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            hops: hops
+        });
 
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
 
@@ -41,7 +47,8 @@ contract HopOnlyCellTest is BaseTest {
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({
             action: Action.Hop,
-            gasLimit: 450_000,
+            requiredGasLimit: 450_000,
+            recipientGasLimit: 0,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -54,8 +61,13 @@ contract HopOnlyCellTest is BaseTest {
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({
+            sourceBlockchainId: "",
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            hops: hops
+        });
 
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
 
@@ -70,7 +82,8 @@ contract HopOnlyCellTest is BaseTest {
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({
             action: Action.HopAndCall,
-            gasLimit: 450_000,
+            requiredGasLimit: 450_000,
+            recipientGasLimit: 0,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -83,8 +96,13 @@ contract HopOnlyCellTest is BaseTest {
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({
+            sourceBlockchainId: "",
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            hops: hops
+        });
 
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
 
@@ -99,7 +117,8 @@ contract HopOnlyCellTest is BaseTest {
         Hop[] memory hops = new Hop[](2);
         hops[1] = Hop({
             action: Action.SwapAndHop,
-            gasLimit: 450_000,
+            requiredGasLimit: 450_000,
+            recipientGasLimit: 0,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -112,8 +131,13 @@ contract HopOnlyCellTest is BaseTest {
             })
         });
 
-        Instructions memory instructions =
-            Instructions({sourceBlockchainId: "", rollbackTeleporterFee: 0, receiver: vm.addr(123), hops: hops});
+        Instructions memory instructions = Instructions({
+            sourceBlockchainId: "",
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            hops: hops
+        });
 
         CellPayload memory payload = CellPayload({instructions: instructions, hop: 0});
 

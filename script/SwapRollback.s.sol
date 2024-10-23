@@ -35,7 +35,8 @@ contract SwapRollback is Script {
         Hop[] memory hops = new Hop[](2);
         hops[0] = Hop({
             action: Action.HopAndCall,
-            gasLimit: 2_500_000,
+            requiredGasLimit: 2_850_000,
+            recipientGasLimit: 2_500_000,
             trade: "",
             bridgePath: BridgePath({
                 multihop: false,
@@ -49,7 +50,8 @@ contract SwapRollback is Script {
         });
         hops[1] = Hop({
             action: Action.SwapAndHop,
-            gasLimit: 0,
+            requiredGasLimit: 0,
+            recipientGasLimit: 0,
             trade: abi.encode(trade),
             bridgePath: BridgePath({
                 multihop: false,
@@ -65,6 +67,7 @@ contract SwapRollback is Script {
         Instructions memory instructions = Instructions({
             sourceBlockchainId: TES_BLOCKCHAIN_ID,
             rollbackTeleporterFee: 0,
+            rollbackGasLimit: 350_000,
             receiver: vm.addr(privateKey),
             hops: hops
         });
