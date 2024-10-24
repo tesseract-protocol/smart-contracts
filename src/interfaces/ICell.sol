@@ -195,18 +195,26 @@ interface ICell {
     error InvalidInstructions();
 
     /**
-     * @notice Starts a cross-chain token operation
-     * @dev Entry point for all Cell operations
+     * @notice Initiates a cross-chain token operation with native or ERC20 token support
+     * @dev Primary entry point for all Cell cross-chain operations
      *
      * Operation Flow:
-     * 1. Transfers tokens from caller to contract
-     * 2. Validates instructions and parameters
-     * 3. Initiates first hop in operation chain
-     * 4. Handles failures with rollback mechanism
+     * 1. Accepts ERC20 tokens (via amount) or native tokens (via msg.value)
+     * 2. Native tokens are automatically wrapped
+     * 3. Validates parameters and instructions
+     * 4. Initiates cross-chain operation
+     * 5. Handles failures via rollback mechanism
      *
-     * @param token Address of input token
-     * @param amount Number of tokens to transfer (must be > 0)
-     * @param instructions Detailed path and operation instructions
+     * @param token Address of ERC20 token (ignored when sending native tokens)
+     * @param amount Amount of ERC20 tokens (ignored when sending native tokens)
+     * @param instructions Detailed path and operation instructions for the cross-chain operation
+     *
+     * @custom:example
+     * // For ERC20 tokens:
+     * cell.initiate(tokenAddress, 1000, instructions);
+     *
+     * // For native tokens:
+     * cell.initiate{value: 1 ether}(address(0), 0, instructions);
      */
-    function initiate(address token, uint256 amount, Instructions calldata instructions) external;
+    function initiate(address token, uint256 amount, Instructions calldata instructions) external payable;
 }

@@ -52,22 +52,36 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     }
 
     /**
-     * @notice Initiates a cross-chain token swap or bridge operation
-     * @dev Transfers tokens from sender to contract and initiates the cross-chain operation
-     * @param token Address of the token to be swapped/bridged
-     * @param amount Amount of tokens to be swapped/bridged (must be > 0)
-     * @param instructions Structured data containing routing and swap instructions
+     * @notice Initiates a cross-chain token operation with support for native and ERC20 tokens
+     * @dev Entry point for starting cross-chain operations that:
+     *      1. Accepts either native tokens (via msg.value) or ERC20 tokens
+     *      2. Wraps native tokens into wrapped native token (e.g., ETH -> WETH)
+     *      3. Initiates the cross-chain operation
+     * @param token Address of the ERC20 token to be processed
+     *              Ignored if native tokens are sent
+     * @param amount Amount of ERC20 tokens to process
+     *               Ignored if native tokens are sent
+     * @param instructions Detailed routing and processing instructions
      */
     function initiate(address token, uint256 amount, Instructions calldata instructions)
         external
+        payable
         override
         nonReentrant
     {
-        if (amount == 0) {
+        if (amount == 0 && msg.value == 0) {
             revert InvalidAmount();
         }
+
+        if (msg.value > 0) {
+            wrappedNativeToken.deposit{value: msg.value}();
+            token = address(wrappedNativeToken);
+            amount = msg.value;
+        } else {
+            IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        }
         emit Initiated(msg.sender, token, amount);
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+
         CellPayload memory payload = CellPayload({
             instructions: instructions,
             rollbackDestination: instructions.hops[0].bridgePath.bridgeSourceChain,

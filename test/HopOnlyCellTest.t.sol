@@ -330,4 +330,75 @@ contract HopOnlyCellTest is BaseTest {
         mockReceiveTokens(address(cell), address(usdcTokenHome), 1e6, payload);
         vm.assertEq(IERC20(WAVAX).balanceOf(address(cell)), 100e18);
     }
+
+    function test_Native_Initiate() public {
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
+            action: Action.Hop,
+            requiredGasLimit: 900_000,
+            recipientGasLimit: 450_000,
+            trade: "",
+            bridgePath: BridgePath({
+                sourceBridgeIsNative: true,
+                bridgeSourceChain: address(nativeTokenHome),
+                bridgeDestinationChain: randomRemoteAddress,
+                cellDestinationChain: vm.addr(9876),
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
+                teleporterFee: 0,
+                secondaryTeleporterFee: 0
+            })
+        });
+
+        Instructions memory instructions = Instructions({
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            payableReceiver: true,
+            hops: hops
+        });
+
+        vm.deal(vm.addr(123123), 100e18);
+        vm.startPrank(vm.addr(123123));
+        vm.expectEmit(teleporterRegistry.getLatestTeleporter());
+        emit SendCrossChainMessage();
+        cell.initiate{value: 10 ether}(address(0), 0, instructions);
+    }
+
+    function test_ERC20_Initiate() public {
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
+            action: Action.Hop,
+            requiredGasLimit: 900_000,
+            recipientGasLimit: 450_000,
+            trade: "",
+            bridgePath: BridgePath({
+                sourceBridgeIsNative: false,
+                bridgeSourceChain: address(usdcTokenHome),
+                bridgeDestinationChain: randomRemoteAddress,
+                cellDestinationChain: vm.addr(9876),
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
+                teleporterFee: 0,
+                secondaryTeleporterFee: 0
+            })
+        });
+
+        Instructions memory instructions = Instructions({
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            payableReceiver: true,
+            hops: hops
+        });
+
+        writeTokenBalance(vm.addr(123123), USDC, 1000e6);
+        vm.startPrank(vm.addr(123123));
+        IERC20(USDC).approve(address(cell), 1000e6);
+        vm.expectEmit(teleporterRegistry.getLatestTeleporter());
+        emit SendCrossChainMessage();
+        cell.initiate(USDC, 1000e6, instructions);
+    }
 }
