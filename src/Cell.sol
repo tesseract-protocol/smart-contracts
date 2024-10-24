@@ -224,8 +224,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         Hop memory hop = payload.instructions.hops[0];
 
         if (hop.action == Action.SwapAndTransfer || hop.action == Action.SwapAndHop) {
-            (bool success, address tokenOut, uint256 amountOut) =
-                _swap(token, amount, payload.instructions.hops[0].trade);
+            (bool success, address tokenOut, uint256 amountOut) = _swap(token, amount, hop.trade);
             if (success) {
                 token = tokenOut;
                 amount = amountOut;
