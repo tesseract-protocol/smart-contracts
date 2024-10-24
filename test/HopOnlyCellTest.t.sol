@@ -292,4 +292,42 @@ contract HopOnlyCellTest is BaseTest {
         emit SendCrossChainMessage();
         mockReceiveNative(address(cell), 100e18, payload);
     }
+
+    function test_InvalidInstructions() public {
+        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
+            action: Action.Hop,
+            requiredGasLimit: 900_000,
+            recipientGasLimit: 450_000,
+            trade: "",
+            bridgePath: BridgePath({
+                sourceBridgeIsNative: true,
+                bridgeSourceChain: address(nativeTokenHome),
+                bridgeDestinationChain: randomRemoteAddress,
+                cellDestinationChain: vm.addr(9876),
+                destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
+                teleporterFee: 0,
+                secondaryTeleporterFee: 0
+            })
+        });
+
+        Instructions memory instructions = Instructions({
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            receiver: vm.addr(123),
+            payableReceiver: true,
+            hops: hops
+        });
+
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+
+        writeTokenBalance(address(cell), WAVAX, 100e18);
+
+        vm.assertEq(IERC20(WAVAX).balanceOf(address(cell)), 100e18);
+        mockReceiveTokens(address(cell), address(usdcTokenHome), 1e6, payload);
+        vm.assertEq(IERC20(WAVAX).balanceOf(address(cell)), 100e18);
+    }
 }

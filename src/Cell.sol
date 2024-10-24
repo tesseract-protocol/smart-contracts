@@ -226,6 +226,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         } else if (
             hop.action == Action.Hop || (hop.action == Action.SwapAndHop && payload.instructions.hops.length == 1)
         ) {
+            if (hop.action == Action.Hop && hop.bridgePath.sourceBridgeIsNative && token != address(wrappedNativeToken))
+            {
+                revert InvalidInstructions();
+            }
             _send(token, amount, payload);
         } else {
             _sendAndCall(token, amount, payload);

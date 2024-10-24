@@ -176,6 +176,7 @@ interface ICell {
     error SwapAndRollbackFailed();
     error RollbackFailedInvalidFee();
     error InvalidAmount();
+    error InvalidInstructions();
 
     /**
      * @notice Starts a cross-chain token operation
