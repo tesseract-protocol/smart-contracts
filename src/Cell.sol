@@ -29,7 +29,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     using SafeERC20 for IERC20;
     using Address for address payable;
 
-    IWrappedNativeToken wrappedNativeToken;
+    IWrappedNativeToken public immutable wrappedNativeToken;
     bytes32 public immutable blockchainID;
 
     /**
