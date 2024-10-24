@@ -42,7 +42,7 @@ contract WavaxToUsdcSwap is Script {
         vm.selectFork(fujiForkId);
 
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) =
             YakSwapCell(payable(CELL_FUJI)).route(SWAP_AMOUNT_IN, WAVAX_FUJI, USDC_FUJI, abi.encode(extras));
 

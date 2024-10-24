@@ -12,7 +12,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 100e18;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, WAVAX, USDC, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
@@ -56,7 +56,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 10e18;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, WAVAX, USDC, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
@@ -100,7 +100,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, WAVAX, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
@@ -359,7 +359,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, WAVAX, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
@@ -403,7 +403,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, WAVAX, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
@@ -447,7 +447,7 @@ contract YakSwapCellTest is BaseTest {
 
         uint256 amountIn = 10e18;
         YakSwapCell.Extras memory extras =
-            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFee: 0});
+            YakSwapCell.Extras({maxSteps: 2, gasPrice: 25e9, slippageBips: 100, yakSwapFeeBips: 0});
         (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, WAVAX, USDC, abi.encode(extras));
         YakSwapCell.TradeData memory decodedTrade = abi.decode(trade, (YakSwapCell.TradeData));
 
