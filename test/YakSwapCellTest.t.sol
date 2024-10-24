@@ -339,17 +339,8 @@ contract YakSwapCellTest is BaseTest {
             })
         });
 
-        Instructions memory instructions = Instructions({
-            rollbackTeleporterFee: 0,
-            rollbackGasLimit: 450_000,
-            receiver: vm.addr(123),
-            payableReceiver: true,
-            hops: hops
-        });
-
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
-
+        Instructions memory instructions =
+            Instructions({rollbackTeleporterFee: 0, rollbackGasLimit: 450_000, payableReceiver: true, hops: hops});
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
         mockReceiveNative(address(cell), 10e18, payload);

@@ -20,7 +20,9 @@ import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/inte
 
 /**
  * @title Cell
- * @dev Abstract contract for cross-chain token swaps and transfers
+ * @dev Abstract contract for facilitating cross-chain token swaps and transfers
+ * This contract implements the core functionality for cross-chain operations,
+ * including token swaps, transfers, and multi-hop transactions.
  */
 abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -34,6 +36,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
     }
 
+    /**
+     * @dev Fallback function to receive native tokens
+     * @notice Only accepts native tokens from the wrapped native token contract
+     */
     receive() external payable {
         if (msg.sender != address(wrappedNativeToken)) revert InvalidSender();
     }
@@ -64,6 +70,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Receives tokens from another chain and processes them
+     * @dev Handles the receipt of ERC20 tokens from cross-chain transfers
      * @param sourceBlockchainID The ID of the source blockchain
      * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
      * @param originSenderAddress The address of the sender on the origin chain
@@ -84,6 +91,17 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         _receiveTokens(sourceBlockchainID, originTokenTransferrerAddress, token, amount, false, payload);
     }
 
+    /**
+     * @notice Receives native tokens from another chain and processes them
+     * @dev Handles the receipt of native tokens from cross-chain transfers.
+     * The received native tokens are immediately wrapped into the equivalent ERC20 token
+     * to streamline the routing process. This allows for consistent handling of both
+     * native and non-native tokens in subsequent operations.
+     * @param sourceBlockchainID The ID of the source blockchain
+     * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
+     * @param originSenderAddress The address of the sender on the origin chain
+     * @param payload The payload containing instructions for further processing
+     */
     function receiveTokens(
         bytes32 sourceBlockchainID,
         address originTokenTransferrerAddress,
@@ -97,6 +115,16 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         );
     }
 
+    /**
+     * @notice Internal function to process received tokens
+     * @dev Decodes the payload and routes the tokens accordingly
+     * @param sourceBlockchainID The ID of the source blockchain
+     * @param originTokenTransferrerAddress The address of the token transferrer on the origin chain
+     * @param token The address of the received token
+     * @param amount The amount of tokens received
+     * @param receivedNative Boolean indicating if native tokens were received
+     * @param payload The payload containing instructions for further processing
+     */
     function _receiveTokens(
         bytes32 sourceBlockchainID,
         address originTokenTransferrerAddress,
@@ -115,6 +143,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Calculates the route for a token swap
+     * @dev This function should be implemented by the derived contract
      * @param amountIn The amount of input tokens
      * @param tokenIn The address of the input token
      * @param tokenOut The address of the output token
@@ -130,7 +159,8 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Performs a token swap
-     * @dev IMPORTANT: This function should use proper exception handling to manage errors.
+     * @dev This function should be implemented by the derived contract.
+     * IMPORTANT: This function should use proper exception handling to manage errors.
      * Use try/catch blocks to handle exceptions that may occur during the swap process.
      * Indicate success or failure through the success return parameter.
      * If an exception occurs or the swap fails for any reason:
@@ -154,9 +184,12 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Routes the tokens based on the provided payload
+     * @dev Handles swapping, transferring, and sending tokens across chains
      * @param token The address of the token to route
      * @param amount The amount of tokens to route
      * @param payload The payload containing routing instructions
+     * @param rollbackBridge The address of the bridge to use for rollbacks
+     * @param rollbackNative Boolean indicating if the rollback should use native tokens
      */
     function _route(
         address token,
@@ -210,6 +243,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Sends tokens to another chain and calls a contract
+     * @dev Handles the cross-chain transfer and contract call
      * @param token The address of the token to send
      * @param amount The amount of tokens to send
      * @param payload The payload containing transfer instructions
@@ -252,6 +286,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @notice Sends tokens to another chain
+     * @dev Handles the cross-chain transfer
      * @param token The address of the token to send
      * @param amount The amount of tokens to send
      * @param payload The payload containing transfer instructions

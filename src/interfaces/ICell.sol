@@ -3,8 +3,9 @@ pragma solidity 0.8.18;
 
 /**
  * @dev Payload structure for Cell operations
- * @param instructions Detailed instructions for the operation
- * @param hop Current hop count in the operation sequence
+ * @param instructions Detailed instructions for the cross-chain operation
+ * @param sourceBlockchainID Identifier of the blockchain where the operation originated
+ * @param rollbackDestination Address to send tokens to in case of a rollback
  */
 struct CellPayload {
     Instructions instructions;
@@ -64,10 +65,10 @@ struct BridgePath {
 
 /**
  * @dev Enumeration of possible actions in a hop
- * Hop: Simple token transfer between chains
- * HopAndCall: Token transfer followed by a contract call on the destination chain.
- * SwapAndHop: Perform a swap, then transfer to another chain
- * SwapAndTransfer: Perform a swap and transfer tokens to the final receiver
+ * @param Hop Simple token transfer between chains
+ * @param HopAndCall Token transfer followed by a contract call on the destination chain
+ * @param SwapAndHop Perform a swap, then transfer to another chain
+ * @param SwapAndTransfer Perform a swap and transfer tokens to the final receiver
  */
 enum Action {
     Hop,
@@ -75,11 +76,11 @@ enum Action {
     SwapAndHop,
     SwapAndTransfer
 }
+
 /**
  * @title ICell Interface
- * @dev Interface for the Cell contract, defining structures and functions for cross-chain token swaps and transfers
+ * @dev Interface for the Cell contract, defining events, errors, and functions for cross-chain token swaps and transfers
  */
-
 interface ICell {
     /**
      * @dev Emitted when tokens are received by the Cell contract
@@ -141,8 +142,10 @@ interface ICell {
     /**
      * @notice Initiates a cross-chain swap operation
      * @dev This function starts the process of a cross-chain token swap.
-     * It should transfer the specified tokens from the caller to the contract,
-     * then initiate the swap process according to the provided instructions.
+     * It transfers the specified tokens from the caller to the contract,
+     * then initiates the swap process according to the provided instructions.
+     * If the swap fails, a rollback will be attempted. If both the swap and rollback fail,
+     * the SwapAndRollbackFailed error will be thrown.
      * @param token Address of the token to be swapped
      * @param amount Amount of tokens to be swapped
      * @param instructions Detailed instructions for the swap operation
