@@ -158,9 +158,25 @@ interface ICell {
      * @dev Logs rollback operations for tracking failed transactions
      * @param receiver Address receiving returned tokens (indexed)
      * @param token Address of returned token (indexed)
-     * @param amount Amount of tokens returned (indexed)
+     * @param amount Amount of tokens returned
      */
-    event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
+    event Rollback(address indexed receiver, address indexed token, uint256 amount);
+
+    /**
+     * @notice Event emitted when tokens are recovered from the contract
+     * @dev This event serves multiple purposes:
+     *      1. Tracks emergency token recoveries
+     *      2. Provides transparency for contract token movements
+     *      3. Helps audit unexpected token accumulation
+     *
+     * Token Address Interpretation:
+     * - address(0) indicates native token recovery
+     * - non-zero address indicates ERC20 token recovery
+     *
+     * @param token Address of recovered token (address(0) for native tokens)
+     * @param amount Amount of tokens recovered
+     */
+    event Recovered(address indexed token, uint256 amount);
 
     /**
      * @notice Custom errors for Cell operations
@@ -170,7 +186,7 @@ interface ICell {
      * error SwapAndRollbackFailed - Critical error when both swap and rollback fail
      * error RollbackFailedInvalidFee - Thrown when rollback fails due to insufficient fee
      * error InvalidAmount - Thrown when operation amount is zero or invalid
-     *
+     * error InvalidInstructions - Thrown when instructions are invalid
      */
     error InvalidSender();
     error SwapAndRollbackFailed();

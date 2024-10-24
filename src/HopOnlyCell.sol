@@ -24,7 +24,7 @@ contract HopOnlyCell is Cell {
      * @dev Initializes the contract with wrapped native token support
      * @param wrappedNativeToken Address of the wrapped native token contract
      */
-    constructor(address wrappedNativeToken) Cell(wrappedNativeToken) {}
+    constructor(address owner, address wrappedNativeToken) Cell(owner, wrappedNativeToken) {}
 
     /**
      * @notice Required interface implementation for routing (non-functional)

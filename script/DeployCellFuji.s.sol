@@ -16,7 +16,7 @@ contract DeployCellFuji is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        new YakSwapCell(ROUTER, WAVAX_FUJI);
+        new YakSwapCell(vm.addr(deployerPrivateKey), ROUTER, WAVAX_FUJI);
 
         vm.stopBroadcast();
     }

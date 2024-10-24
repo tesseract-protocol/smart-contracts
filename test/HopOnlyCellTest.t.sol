@@ -6,7 +6,7 @@ import "./../src/HopOnlyCell.sol";
 
 contract HopOnlyCellTest is BaseTest {
     function test_ERC20_SwapAndTransfer() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -42,7 +42,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_SwapAndTransfer() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -78,7 +78,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_Hop() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -114,7 +114,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_Hop() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -150,7 +150,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_HopAndCall() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -186,7 +186,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_HopAndCall() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -222,7 +222,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_SwapAndHop() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -258,7 +258,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_SwapAndHop() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -294,7 +294,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_InvalidInstructions() public {
-        HopOnlyCell cell = new HopOnlyCell(WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({

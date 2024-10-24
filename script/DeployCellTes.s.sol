@@ -15,7 +15,7 @@ contract DeployCellTes is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        new HopOnlyCell(WTES);
+        new HopOnlyCell(vm.addr(deployerPrivateKey), WTES);
 
         vm.stopBroadcast();
     }

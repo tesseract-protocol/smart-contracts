@@ -5,6 +5,7 @@ import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./inter
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20TokenTransferrer} from "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
 import {IERC20SendAndCallReceiver} from "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
 import {
@@ -24,7 +25,7 @@ import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/inte
  * This contract implements the core functionality for cross-chain operations,
  * including token swaps, transfers, and multi-hop transactions.
  */
-abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, ReentrancyGuard {
+abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -36,9 +37,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @dev Sets up the contract with the wrapped native token address and retrieves the blockchain ID
      * @param wrappedNativeTokenAddress Address of the wrapped native token contract (e.g., WAVAX)
      */
-    constructor(address wrappedNativeTokenAddress) {
+    constructor(address owner, address wrappedNativeTokenAddress) {
         wrappedNativeToken = IWrappedNativeToken(wrappedNativeTokenAddress);
         blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
+        transferOwnership(owner);
     }
 
     /**
@@ -386,5 +388,44 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         } catch {
             return false;
         }
+    }
+
+    /**
+     * @notice Emergency function to recover accidentally sent ERC20 tokens
+     * @dev Allows contract owner to retrieve tokens that are stuck in the contract
+     *      This is a safety mechanism only - under normal operation, the contract
+     *      should not hold any token balances outside of active operations
+     *
+     * Security Considerations:
+     * - Only callable by contract owner
+     * - Cannot be called during active operations
+     * - Only be used for genuinely stuck tokens
+     *
+     * @param tokenAddress Address of the ERC20 token to recover
+     * @param tokenAmount Amount of tokens to recover (must be > 0)
+     */
+    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
+        require(tokenAmount > 0);
+        IERC20(tokenAddress).safeTransfer(msg.sender, tokenAmount);
+        emit Recovered(tokenAddress, tokenAmount);
+    }
+
+    /**
+     * @notice Emergency function to recover accidentally sent native tokens
+     * @dev Allows contract owner to retrieve native tokens that are stuck in the contract
+     *      This is a safety mechanism only - under normal operation, the contract
+     *      should not hold native token balance outside of active operations
+     *
+     * Security Considerations:
+     * - Only callable by contract owner
+     * - Cannot be called during active operations
+     * - Only be used for genuinely stuck native tokens
+     *
+     * @param amount Amount of native tokens to recover (must be > 0)
+     */
+    function recoverNative(uint256 amount) external onlyOwner {
+        require(amount > 0);
+        payable(msg.sender).transfer(amount);
+        emit Recovered(address(0), amount);
     }
 }
