@@ -280,8 +280,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             secondaryFee: isMultiHop ? hop.bridgePath.secondaryTeleporterFee : 0
         });
         if (hop.bridgePath.sourceBridgeIsNative) {
-            wrappedNativeToken.withdraw(amount);
-            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall{value: amount}(input);
+            wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
+            IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
+            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall{
+                value: amount - hop.bridgePath.teleporterFee
+            }(input);
         } else {
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
             IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
@@ -326,8 +329,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             multiHopFallback: isMultiHop ? payload.instructions.receiver : address(0)
         });
         if (hop.bridgePath.sourceBridgeIsNative) {
-            wrappedNativeToken.withdraw(amount);
-            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).send{value: amount}(input);
+            wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
+            IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
+            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).send{value: amount - hop.bridgePath.teleporterFee}(
+                input
+            );
         } else {
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
             IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).send(input, amount - hop.bridgePath.teleporterFee);
@@ -365,8 +371,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             multiHopFallback: address(0)
         });
         if (rollbackNative) {
-            wrappedNativeToken.withdraw(amount);
-            INativeTokenTransferrer(rollbackBridge).send{value: amount}(input);
+            wrappedNativeToken.withdraw(amount - payload.instructions.rollbackTeleporterFee);
+            IERC20(token).forceApprove(rollbackBridge, payload.instructions.rollbackTeleporterFee);
+            INativeTokenTransferrer(rollbackBridge).send{value: amount - payload.instructions.rollbackTeleporterFee}(
+                input
+            );
         } else {
             IERC20(token).forceApprove(rollbackBridge, amount);
             IERC20TokenTransferrer(rollbackBridge).send(input, amount - payload.instructions.rollbackTeleporterFee);

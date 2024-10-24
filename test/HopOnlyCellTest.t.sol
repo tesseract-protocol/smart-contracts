@@ -92,7 +92,7 @@ contract HopOnlyCellTest is BaseTest {
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
                 destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
-                teleporterFee: 0,
+                teleporterFee: 1e6,
                 secondaryTeleporterFee: 0
             })
         });
@@ -128,7 +128,7 @@ contract HopOnlyCellTest is BaseTest {
                 bridgeDestinationChain: randomRemoteAddress,
                 cellDestinationChain: vm.addr(9876),
                 destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
-                teleporterFee: 0,
+                teleporterFee: 1e18,
                 secondaryTeleporterFee: 0
             })
         });
