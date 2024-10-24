@@ -95,7 +95,7 @@ contract YakSwapCell is Cell {
         override
         returns (bool success, address tokenOut, uint256 amountOut)
     {
-        TradeData memory tradeData = abi.decode(payload.instructions.hops[payload.hop].trade, (TradeData));
+        TradeData memory tradeData = abi.decode(tradePayload, (TradeData));
 
         tokenOut = tradeData.trade.path.length > 0 ? tradeData.trade.path[tradeData.trade.path.length - 1] : address(0);
         if (tokenOut == address(0)) {

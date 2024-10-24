@@ -18,8 +18,8 @@ contract WavaxToTesSwap is Script {
     address constant TES_FUJI_REMOTE = 0x251EAef319946EF4307f003c1569d70D3143CBE8;
     address constant TES_TES_HOME = 0x43fc1CEe5F0b6EB286980e7E62249DfdA3B6FFE9;
 
-    address payable constant CELL_FUJI = payable(0x357894f83b54EdC0e03F342e0164FcD2Bee78E32);
-    address payable constant CELL_TES = payable(0x09f6f221A52d55009e8F843446D466261517Cbf7);
+    address constant CELL_FUJI = 0xf2F409eE504703F3507006115685D42F2B1e5cE1;
+    address constant CELL_TES = 0x72ee02FA4CC61D2752eCfD174C1e113feF789589;
 
     uint256 constant SWAP_AMOUNT_IN = 1000000000000000;
 
@@ -43,10 +43,10 @@ contract WavaxToTesSwap is Script {
         YakSwapCell.Extras memory extras =
             YakSwapCell.Extras({maxSteps: 1, gasPrice: 25e9, slippageBips: TRADE_SLIPPAGE_BIPS, yakSwapFee: 0});
         (bytes memory trade, uint256 gasEstimate) =
-            YakSwapCell(CELL_FUJI).route(SWAP_AMOUNT_IN, WAVAX_FUJI, TES_FUJI_REMOTE, abi.encode(extras));
+            YakSwapCell(payable(CELL_FUJI)).route(SWAP_AMOUNT_IN, WAVAX_FUJI, TES_FUJI_REMOTE, abi.encode(extras));
 
-        YakSwapCell.TradeData memory tradeData = abi.decode(trade, (YakSwapCell.TradeData));
-        console.log("AMOUNT OUT %d", tradeData.trade.amountOut);
+        Trade memory encodedTrade = abi.decode(trade, (Trade));
+        console.log("AMOUNT OUT %d", encodedTrade.amountOut);
 
         vm.selectFork(tesForkId);
 
@@ -59,8 +59,8 @@ contract WavaxToTesSwap is Script {
             recipientGasLimit: gasEstimate + GAS_BUFFER,
             trade: "",
             bridgePath: BridgePath({
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: WAVAX_TES_REMOTE,
-                destinationBridgeIsNative: false,
                 bridgeDestinationChain: WAVAX_HOME_FUJI,
                 cellDestinationChain: CELL_FUJI,
                 destinationBlockchainID: FUJI_BLOCKCHAIN_ID,
@@ -74,18 +74,17 @@ contract WavaxToTesSwap is Script {
             recipientGasLimit: 0,
             trade: trade,
             bridgePath: BridgePath({
+                sourceBridgeIsNative: false,
                 bridgeSourceChain: TES_FUJI_REMOTE,
-                destinationBridgeIsNative: false,
                 bridgeDestinationChain: TES_TES_HOME,
                 cellDestinationChain: address(0),
-                destinationBlockchainId: TES_BLOCKCHAIN_ID,
-                teleporterFee: (tradeData.trade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
+                destinationBlockchainID: TES_BLOCKCHAIN_ID,
+                teleporterFee: (encodedTrade.amountOut * TELEPORTER_FEE_BIPS_DESTINATION) / FEE_BIPS_DIVISOR,
                 secondaryTeleporterFee: 0
             })
         });
 
         Instructions memory instructions = Instructions({
-            sourceBlockchainId: TES_BLOCKCHAIN_ID,
             rollbackTeleporterFee: 0,
             rollbackGasLimit: HOP_GAS_ESTIMATE,
             receiver: vm.addr(privateKey),
@@ -93,13 +92,15 @@ contract WavaxToTesSwap is Script {
             hops: hops
         });
 
+        //console.log(vm.toString(abi.encodeWithSelector(Initiator.initiate.selector, swapData)));
+
         WarpMessengerMock warp = new WarpMessengerMock();
         vm.etch(0x0200000000000000000000000000000000000005, address(warp).code);
 
         vm.startBroadcast(privateKey);
 
         IERC20(WAVAX_TES_REMOTE).approve(CELL_TES, SWAP_AMOUNT_IN + teleporterFeeOrigin);
-        Cell(CELL_TES).initiate(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
+        Cell(payable(CELL_TES)).initiate(WAVAX_TES_REMOTE, SWAP_AMOUNT_IN + teleporterFeeOrigin, instructions);
 
         vm.stopBroadcast();
     }

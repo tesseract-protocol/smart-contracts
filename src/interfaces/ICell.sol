@@ -21,7 +21,6 @@ struct CellPayload {
 struct Instructions {
     address receiver;
     bool payableReceiver;
-    bytes32 sourceBlockchainId;
     uint256 rollbackTeleporterFee;
     uint256 rollbackGasLimit;
     Hop[] hops;
@@ -44,20 +43,19 @@ struct Hop {
 
 /**
  * @dev Defines the path for bridging tokens between chains
- * @param multihop Indicates if multihop should be used in this hop. If true, secondaryTeleporterFee might be set.
  * @param bridgeSourceChain Address of the bridge on the source chain
+ * @param sourceBridgeIsNative Boolean indicating if the source bridge handles native tokens
  * @param bridgeDestinationChain Address of the bridge on the destination chain
  * @param cellDestinationChain Address of the Cell contract on the destination chain
  * @param destinationBlockchainID Identifier of the destination blockchain
- * @param teleporterFee Concrete amount of tokens to be used as fee for the Teleporter service.
+ * @param teleporterFee Amount of tokens to be used as fee for the Teleporter service.
  *        This is in tokenIn if no swap occurred in this hop, or in tokenOut if a swap did occur.
- * @param secondaryTeleporterFee Secondary fee for the Teleporter service. This might be set if multihop is true.
+ * @param secondaryTeleporterFee Secondary fee for the Teleporter service. This might be set in multihop scenarios.
  */
 struct BridgePath {
     address bridgeSourceChain;
     bool sourceBridgeIsNative;
     address bridgeDestinationChain;
-    bool destinationBridgeIsNative;
     address cellDestinationChain;
     bytes32 destinationBlockchainID;
     uint256 teleporterFee;
@@ -99,6 +97,12 @@ interface ICell {
         uint256 amount
     );
 
+    /**
+     * @dev Emitted when native tokens are received by the Cell contract
+     * @param sourceBlockchainID Identifier of the source blockchain
+     * @param sourceBridge Address of the bridge on the source chain
+     * @param originSender Address of the original sender
+     */
     event CellReceivedNativeTokens(
         bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender
     );
@@ -117,13 +121,22 @@ interface ICell {
      * @param token Address of the token being rolled back
      * @param amount Amount of tokens being rolled back
      */
-    event Rollback(address indexed receiver, address indexed token, uint256 amount);
+    event Rollback(address indexed receiver, address indexed token, uint256 indexed amount);
 
-    error SwapFailed();
+    /**
+     * @dev Error thrown when an invalid sender tries to interact with the contract
+     */
+    error InvalidSender();
+
+    /**
+     * @dev Error thrown when both the swap operation and the subsequent rollback attempt fail
+     * This error indicates a critical failure in the system where not only did the initial
+     * swap fail, but the safety mechanism (rollback) also failed to execute properly
+     */
+    error SwapAndRollbackFailed();
+
     error RollbackFailedInvalidFee();
     error InvalidAmount();
-
-    error InvalidSender();
 
     /**
      * @notice Initiates a cross-chain swap operation
