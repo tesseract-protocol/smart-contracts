@@ -114,7 +114,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         address originTokenTransferrerAddress,
         address originSenderAddress,
         bytes calldata payload
-    ) external payable override {
+    ) external payable override nonReentrant {
         emit CellReceivedNativeTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress);
         wrappedNativeToken.deposit{value: msg.value}();
         _receiveTokens(
