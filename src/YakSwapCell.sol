@@ -18,6 +18,9 @@ import {IYakRouter, FormattedOffer, Trade} from "./interfaces/IYakRouter.sol";
 contract YakSwapCell is Cell {
     using SafeERC20 for IERC20;
 
+    error InvalidSlippageBips();
+    error NoRouteFound();
+
     /**
      * @notice Configuration parameters for YakRouter swaps
      * @dev External parameters passed to customize swap behavior
@@ -85,8 +88,14 @@ contract YakSwapCell is Cell {
         returns (bytes memory trade, uint256 gasEstimate)
     {
         Extras memory extras = abi.decode(data, (Extras));
+        if (extras.slippageBips >= BIPS_DIVISOR) {
+            revert InvalidSlippageBips();
+        }
         FormattedOffer memory offer =
             router.findBestPathWithGas(amountIn, tokenIn, tokenOut, extras.maxSteps, extras.gasPrice);
+        if (offer.amounts.length < 2 || offer.adapters.length == 0) {
+            revert NoRouteFound();
+        }
 
         TradeData memory tradeData = TradeData({
             trade: Trade({
