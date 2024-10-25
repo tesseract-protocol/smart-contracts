@@ -38,6 +38,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param wrappedNativeTokenAddress Address of the wrapped native token contract (e.g., WAVAX)
      */
     constructor(address owner, address wrappedNativeTokenAddress) {
+        if (owner == address(0) || wrappedNativeTokenAddress == address(0)) {
+            revert InvalidArgument();
+        }
         wrappedNativeToken = IWrappedNativeToken(wrappedNativeTokenAddress);
         blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
         transferOwnership(owner);

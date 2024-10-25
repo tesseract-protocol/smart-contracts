@@ -187,12 +187,14 @@ interface ICell {
      * error RollbackFailedInvalidFee - Thrown when rollback fails due to insufficient fee
      * error InvalidAmount - Thrown when operation amount is zero or invalid
      * error InvalidInstructions - Thrown when instructions are invalid
+     * error InvalidArgument - Thrown when constructor receives invalid arguments
      */
     error InvalidSender();
     error SwapAndRollbackFailed();
     error RollbackFailedInvalidFee();
     error InvalidAmount();
     error InvalidInstructions();
+    error InvalidArgument();
 
     /**
      * @notice Initiates a cross-chain token operation with native or ERC20 token support

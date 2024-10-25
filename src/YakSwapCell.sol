@@ -61,6 +61,9 @@ contract YakSwapCell is Cell {
      * @param wrappedNativeToken Address of the wrapped native token (e.g., WAVAX)
      */
     constructor(address owner, address routerAddress, address wrappedNativeToken) Cell(owner, wrappedNativeToken) {
+        if (routerAddress == address(0)) {
+            revert InvalidArgument();
+        }
         router = IYakRouter(routerAddress);
     }
 
