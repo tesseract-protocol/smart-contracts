@@ -18,7 +18,7 @@ struct CellPayload {
  * @notice Detailed instructions for cross-chain operations
  * @dev Defines the complete path and parameters for token movement across chains
  * @param receiver Address that will receive the final tokens
- * @param payableReceiver Boolean indicating if receiver should receive native tokens
+ * @param payableReceiver Boolean indicating if receiver can/should receive native tokens
  * @param rollbackTeleporterFee Amount of input token for rollback operation fees
  * @param rollbackGasLimit Gas limit for rollback operations
  * @param hops Ordered array of Hop structures defining the complete operation path
@@ -35,7 +35,7 @@ struct Instructions {
  * @notice Represents a single step in a cross-chain operation
  * @dev Each hop can involve a swap, transfer, or both, between chains
  * @param action Enum defining the type of operation for this hop
- * @param requiredGasLimit Gas limit for the primary operation
+ * @param requiredGasLimit Gas limit for the whole operation (bridge + recipientGasLimit)
  * @param recipientGasLimit Gas limit for any recipient contract calls
  * @param trade Encoded trade data (interpretation depends on action type)
  * @param bridgePath Detailed path information for cross-chain token movement
