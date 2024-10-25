@@ -430,13 +430,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * - Cannot be called during active operations
      * - Only be used for genuinely stuck tokens
      *
-     * @param tokenAddress Address of the ERC20 token to recover
-     * @param tokenAmount Amount of tokens to recover (must be > 0)
+     * @param token Address of the ERC20 token to recover
+     * @param amount Amount of tokens to recover (must be > 0)
      */
-    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-        require(tokenAmount > 0);
-        IERC20(tokenAddress).safeTransfer(msg.sender, tokenAmount);
-        emit Recovered(tokenAddress, tokenAmount);
+    function recoverERC20(address token, uint256 amount) external onlyOwner {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+        IERC20(token).safeTransfer(msg.sender, amount);
+        emit Recovered(token, amount);
     }
 
     /**
@@ -453,8 +455,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param amount Amount of native tokens to recover (must be > 0)
      */
     function recoverNative(uint256 amount) external onlyOwner {
-        require(amount > 0);
-        payable(msg.sender).transfer(amount);
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+        payable(msg.sender).sendValue(amount);
         emit Recovered(address(0), amount);
     }
 }
