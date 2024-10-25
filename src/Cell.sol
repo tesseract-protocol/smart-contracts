@@ -76,6 +76,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             revert InvalidAmount();
         }
 
+        if (instructions.hops.length == 0) {
+            revert InvalidInstructions();
+        }
+
         if (msg.value > 0) {
             wrappedNativeToken.deposit{value: msg.value}();
             token = address(wrappedNativeToken);
