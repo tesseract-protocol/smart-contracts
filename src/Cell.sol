@@ -243,15 +243,18 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             }
         }
 
+        if (
+            (hop.action == Action.Hop || hop.action == Action.HopAndCall) && hop.bridgePath.sourceBridgeIsNative
+                && token != address(wrappedNativeToken)
+        ) {
+            revert InvalidInstructions();
+        }
+
         if (hop.action == Action.SwapAndTransfer) {
             _transfer(token, amount, payload);
         } else if (
             hop.action == Action.Hop || (hop.action == Action.SwapAndHop && payload.instructions.hops.length == 1)
         ) {
-            if (hop.action == Action.Hop && hop.bridgePath.sourceBridgeIsNative && token != address(wrappedNativeToken))
-            {
-                revert InvalidInstructions();
-            }
             _send(token, amount, payload);
         } else {
             _sendAndCall(token, amount, payload);
