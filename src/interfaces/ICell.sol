@@ -178,6 +178,15 @@ interface ICell {
      */
     event Recovered(address indexed token, uint256 amount);
 
+    /// @notice Emitted when the fee collector address is updated
+    event FeeCollectorUpdated(address indexed newFeeCollector);
+
+    /// @notice Emitted when the base fee is updated
+    event BaseFeeUpdated(uint256 newBaseFeeBips);
+
+    /// @notice Emitted when the fixed fee is updated
+    event FixedFeeUpdated(uint256 newFixedFee);
+
     /**
      * @notice Custom errors for Cell operations
      * @dev Defined errors provide specific failure information
@@ -188,6 +197,8 @@ interface ICell {
      * error InvalidAmount - Thrown when operation amount is zero or invalid
      * error InvalidInstructions - Thrown when instructions are invalid
      * error InvalidArgument - Thrown when constructor receives invalid arguments
+     * error InvalidFeeCollectorUpdate - Thrown when trying to update fee collector to zero address
+     * error InvalidBaseFeeUpdate - Thrown when trying to update base fee to a value greater than BIPS_DIVISOR
      */
     error InvalidSender();
     error SwapAndRollbackFailed();
@@ -195,6 +206,8 @@ interface ICell {
     error InvalidAmount();
     error InvalidInstructions();
     error InvalidArgument();
+    error InvalidFeeCollectorUpdate();
+    error InvalidBaseFeeUpdate();
 
     /**
      * @notice Initiates a cross-chain token operation with native or ERC20 token support
