@@ -30,6 +30,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     using Address for address payable;
 
     uint256 public constant BIPS_DIVISOR = 10_000;
+    uint256 public constant MAX_BASE_FEE = 500;
 
     IWrappedNativeToken public immutable wrappedNativeToken;
     bytes32 public immutable blockchainID;
@@ -455,7 +456,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param newBaseFeeBips The new base fee in basis points
      */
     function updateBaseFeeBips(uint256 newBaseFeeBips) external onlyOwner {
-        if (newBaseFeeBips > BIPS_DIVISOR) {
+        if (newBaseFeeBips > MAX_BASE_FEE) {
             revert InvalidBaseFeeUpdate();
         }
         baseFeeBips = newBaseFeeBips;
