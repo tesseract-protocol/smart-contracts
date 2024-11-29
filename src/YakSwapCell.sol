@@ -49,8 +49,6 @@ contract YakSwapCell is Cell {
         uint256 yakSwapFeeBips;
     }
 
-    uint256 public constant BIPS_DIVISOR = 10_000;
-
     /**
      * @notice YakRouter contract used for swap routing and execution
      * @dev Immutable reference to the YakRouter aggregation protocol
