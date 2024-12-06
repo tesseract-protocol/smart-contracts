@@ -18,6 +18,8 @@ contract UniV2Cell is Cell {
     error SlippageExceeded();
 
     uint256 internal constant FEE_DENOMINATOR = 1e3;
+    uint256 public constant BIPS_DIVISOR = 10_000;
+
     uint256 public immutable feeCompliment;
     address public immutable factory;
     uint256 public immutable swapGasEstimate;
