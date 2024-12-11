@@ -8,7 +8,10 @@ contract UniV2CellTest is BaseTest {
     address public UNIV2_FACTORY = 0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10;
 
     function test_ERC20_ERC20_SwapAndTransfer() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 100e18;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
@@ -50,8 +53,61 @@ contract UniV2CellTest is BaseTest {
         vm.assertApproxEqRel(IERC20(USDC).balanceOf(vm.addr(123)), decodedTrade.amountOut, 0.1e18);
     }
 
+    function test_ERC20_ERC20_Multi_SwapAndTransfer() public {
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
+
+        uint256 amountIn = 1000e6;
+        UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
+        (bytes memory trade, uint256 gasEstimate) = cell.route(amountIn, USDC, YAK, abi.encode(extras));
+        UniV2Cell.Trade memory decodedTrade = abi.decode(trade, (UniV2Cell.Trade));
+
+        vm.assertGt(decodedTrade.amountOut, 0);
+
+        for (uint256 i; i < decodedTrade.path.length; i++) {
+            console2.log(decodedTrade.path[i]);
+        }
+
+        Hop[] memory hops = new Hop[](1);
+        hops[0] = Hop({
+            action: Action.SwapAndTransfer,
+            requiredGasLimit: gasEstimate + 450_000,
+            recipientGasLimit: gasEstimate,
+            trade: trade,
+            bridgePath: BridgePath({
+                sourceBridgeIsNative: false,
+                bridgeSourceChain: address(0),
+                bridgeDestinationChain: address(0),
+                cellDestinationChain: address(0),
+                destinationBlockchainID: "",
+                teleporterFee: 0,
+                secondaryTeleporterFee: 0
+            })
+        });
+
+        Instructions memory instructions = Instructions({
+            receiver: vm.addr(123),
+            payableReceiver: true,
+            rollbackTeleporterFee: 0,
+            rollbackGasLimit: 450_000,
+            hops: hops
+        });
+
+        CellPayload memory payload =
+            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+
+        mockReceiveTokens(address(cell), address(usdcTokenHome), amountIn, payload);
+
+        vm.assertApproxEqRel(IERC20(YAK).balanceOf(vm.addr(123)), decodedTrade.amountOut, 0.1e18);
+    }
+
     function test_Native_ERC20_SwapAndTransfer() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 10e18;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
@@ -94,7 +150,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_Native_SwapAndTransfer() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 1000e6;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
@@ -137,7 +196,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_Hop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -173,7 +235,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_Native_Hop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -209,7 +274,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_Native_ERC20_Hop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -245,7 +313,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_HopAndCall() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -281,7 +352,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_Native_HopAndCall() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -317,7 +391,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_Native_ERC20_HopAndCall() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -352,7 +429,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_SwapAndHop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 1000e6;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
@@ -395,7 +475,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_ERC20_Native_SwapAndHop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 1000e6;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
@@ -438,7 +521,10 @@ contract UniV2CellTest is BaseTest {
     }
 
     function test_Native_ERC20_SwapAndHop() public {
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000);
+        address[] memory hopTokens = new address[](2);
+        hopTokens[0] = WAVAX;
+        hopTokens[1] = USDC;
+        UniV2Cell cell = new UniV2Cell(vm.addr(1), WAVAX, UNIV2_FACTORY, 3, 120_000, hopTokens, 3);
 
         uint256 amountIn = 10e18;
         UniV2Cell.Extras memory extras = UniV2Cell.Extras({slippageBips: 200});
