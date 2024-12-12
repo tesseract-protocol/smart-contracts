@@ -18,9 +18,10 @@ abstract contract BaseTest is Test {
     event SendCrossChainMessage();
 
     bytes32 public constant CCHAIN_BLOCKCHAIN_ID = 0x0427d4b22a2a78bcddd456742caf91b56badbff985ee19aef14573e7343fd652;
-    bytes32 public constant REMOTE_BLOCKCHAIN_ID = 0x6b1e340aeda6d5780cef4e45728665efa61057acc52fb862b75def9190974288;
+    bytes32 public constant REMOTE_BLOCKCHAIN_ID = 0x7ca356c6720a432ffb58563d59b3424eb441239e373a93a6de9da358b81366f0;
     address public constant USDC = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
+    address public constant YAK = 0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7;
     address public constant WARP_MESSENGER = 0x0200000000000000000000000000000000000005;
 
     ERC20TokenHome public usdcTokenHome;
