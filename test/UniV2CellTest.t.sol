@@ -66,10 +66,6 @@ contract UniV2CellTest is BaseTest {
 
         vm.assertGt(decodedTrade.amountOut, 0);
 
-        for (uint256 i; i < decodedTrade.path.length; i++) {
-            console2.log(decodedTrade.path[i]);
-        }
-
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
             action: Action.SwapAndTransfer,
