@@ -26,4 +26,4 @@ contract WarpMessengerMock {
     function getBlockchainID() external returns (bytes32 blockchainID) {}
 }
 
-// forge script --chain 43113 script/DeployCellFuji.s.sol:DeployCellFuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation -vvvv
+// source .env && forge script --chain 43113 script/DeployCellFuji.s.sol:DeployCellFuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation -vvvv --verifier-url 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan' --etherscan-api-key "verifyContract"

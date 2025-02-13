@@ -151,7 +151,7 @@ interface ICell {
      * @param token Address of input token (indexed)
      * @param amount Number of tokens being processed
      */
-    event Initiated(address indexed sender, address indexed token, uint256 amount);
+    event Initiated(address indexed sender, address indexed token, uint256 amount, bytes instructions);
 
     /**
      * @notice Emitted when tokens are returned due to operation failure

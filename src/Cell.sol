@@ -87,7 +87,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         } else {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
-        emit Initiated(msg.sender, token, amount);
+        emit Initiated(msg.sender, token, amount, abi.encode(instructions));
 
         CellPayload memory payload = CellPayload({
             instructions: instructions,
