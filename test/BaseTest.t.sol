@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 import "forge-std/Test.sol";
 import "../src/interfaces/ICell.sol";
-import "avalanche-interchain-token-transfer/contracts/src/TokenHome/ERC20TokenHome.sol";
-import "avalanche-interchain-token-transfer/contracts/src/TokenHome/NativeTokenHome.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/ITokenTransferrer.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/IERC20TokenTransferrer.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/INativeTokenTransferrer.sol";
+import "@ictt/TokenHome/ERC20TokenHome.sol";
+import "@ictt/TokenHome/NativeTokenHome.sol";
+import "@ictt/interfaces/ITokenTransferrer.sol";
+import "@ictt/interfaces/IERC20TokenTransferrer.sol";
+import "@ictt/interfaces/INativeTokenTransferrer.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "./mocks/TeleporterRegistryMock.sol";
 import "./mocks/WarpMessengerMock.sol";
@@ -37,9 +37,9 @@ abstract contract BaseTest is Test {
         vm.etch(WARP_MESSENGER, address(warp).code);
 
         teleporterRegistry = new TeleporterRegistryMock();
-        usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), USDC, 6);
-        wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), WAVAX, 18);
-        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), WAVAX);
+        usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, USDC, 6);
+        wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, WAVAX, 18);
+        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), 1, WAVAX);
         randomRemoteAddress = vm.addr(123456);
 
         fundBridge(address(usdcTokenHome), USDC, 6);
