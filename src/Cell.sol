@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./interfaces/ICell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20TokenTransferrer} from "@avalanche-interchain-token-transfer/interfaces/IERC20TokenTransferrer.sol";
-import {IERC20SendAndCallReceiver} from "@avalanche-interchain-token-transfer/interfaces/IERC20SendAndCallReceiver.sol";
-import {
-    SendAndCallInput, SendTokensInput
-} from "@avalanche-interchain-token-transfer/interfaces/ITokenTransferrer.sol";
+import {IERC20TokenTransferrer} from "@ictt/interfaces/IERC20TokenTransferrer.sol";
+import {IERC20SendAndCallReceiver} from "@ictt/interfaces/IERC20SendAndCallReceiver.sol";
+import {SendAndCallInput, SendTokensInput} from "@ictt/interfaces/ITokenTransferrer.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {INativeTokenTransferrer} from "@avalanche-interchain-token-transfer/interfaces/INativeTokenTransferrer.sol";
-import {INativeSendAndCallReceiver} from
-    "@avalanche-interchain-token-transfer/interfaces/INativeSendAndCallReceiver.sol";
-import {IWrappedNativeToken} from "@avalanche-interchain-token-transfer/interfaces/IWrappedNativeToken.sol";
-import {TokenRemote} from "@avalanche-interchain-token-transfer/TokenRemote/TokenRemote.sol";
+import {INativeTokenTransferrer} from "@ictt/interfaces/INativeTokenTransferrer.sol";
+import {INativeSendAndCallReceiver} from "@ictt/interfaces/INativeSendAndCallReceiver.sol";
+import {IWrappedNativeToken} from "@ictt/interfaces/IWrappedNativeToken.sol";
+import {TokenRemote} from "@ictt/TokenRemote/TokenRemote.sol";
 import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/interfaces/IWarpMessenger.sol";
 
 /**
@@ -413,7 +410,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @return True if this is part of multi-hop transaction, false otherwise
      */
     function _isMultiHop(Hop memory hop) internal view returns (bool) {
-        try TokenRemote(hop.bridgePath.bridgeSourceChain).tokenHomeBlockchainID() returns (
+        try TokenRemote(hop.bridgePath.bridgeSourceChain).getTokenHomeBlockchainID() returns (
             bytes32 tokenHomeBlockChainID
         ) {
             return tokenHomeBlockChainID != hop.bridgePath.destinationBlockchainID;
