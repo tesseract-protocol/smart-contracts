@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 /**
  * @notice Core payload structure for all Cell cross-chain operations

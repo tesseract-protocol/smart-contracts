@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 import "forge-std/Test.sol";
 import "../src/interfaces/ICell.sol";
-import "avalanche-interchain-token-transfer/contracts/src/TokenHome/ERC20TokenHome.sol";
-import "avalanche-interchain-token-transfer/contracts/src/TokenHome/NativeTokenHome.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/ITokenTransferrer.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/IERC20TokenTransferrer.sol";
-import "avalanche-interchain-token-transfer/contracts/src/interfaces/INativeTokenTransferrer.sol";
+import "@ictt/TokenHome/ERC20TokenHome.sol";
+import "@ictt/TokenHome/NativeTokenHome.sol";
+import "@ictt/interfaces/ITokenTransferrer.sol";
+import "@ictt/interfaces/IERC20TokenTransferrer.sol";
+import "@ictt/interfaces/INativeTokenTransferrer.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "./mocks/TeleporterRegistryMock.sol";
 import "./mocks/WarpMessengerMock.sol";
@@ -18,9 +18,10 @@ abstract contract BaseTest is Test {
     event SendCrossChainMessage();
 
     bytes32 public constant CCHAIN_BLOCKCHAIN_ID = 0x0427d4b22a2a78bcddd456742caf91b56badbff985ee19aef14573e7343fd652;
-    bytes32 public constant REMOTE_BLOCKCHAIN_ID = 0x6b1e340aeda6d5780cef4e45728665efa61057acc52fb862b75def9190974288;
+    bytes32 public constant REMOTE_BLOCKCHAIN_ID = 0x7ca356c6720a432ffb58563d59b3424eb441239e373a93a6de9da358b81366f0;
     address public constant USDC = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
+    address public constant YAK = 0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7;
     address public constant WARP_MESSENGER = 0x0200000000000000000000000000000000000005;
 
     ERC20TokenHome public usdcTokenHome;
@@ -36,9 +37,9 @@ abstract contract BaseTest is Test {
         vm.etch(WARP_MESSENGER, address(warp).code);
 
         teleporterRegistry = new TeleporterRegistryMock();
-        usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), USDC, 6);
-        wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), WAVAX, 18);
-        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), WAVAX);
+        usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, USDC, 6);
+        wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, WAVAX, 18);
+        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), 1, WAVAX);
         randomRemoteAddress = vm.addr(123456);
 
         fundBridge(address(usdcTokenHome), USDC, 6);

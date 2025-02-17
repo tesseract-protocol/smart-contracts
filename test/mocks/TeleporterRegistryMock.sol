@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 import "./TeleporterMock.sol";
 
 contract TeleporterRegistryMock {
-    uint256 public constant latestVersion = 0;
+    uint256 public constant latestVersion = 1;
 
     address immutable teleporterMessenger;
 
