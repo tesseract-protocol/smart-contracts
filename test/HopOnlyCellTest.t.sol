@@ -38,7 +38,7 @@ contract HopOnlyCellTest is BaseTest {
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), 1000e6, payload);
 
-        vm.assertEq(IERC20(USDC).balanceOf(vm.addr(123)), 1000e6);
+        vm.assertEq(ERC20(USDC).balanceOf(vm.addr(123)), 1000e6);
     }
 
     function test_Native_SwapAndTransfer() public {
@@ -326,9 +326,9 @@ contract HopOnlyCellTest is BaseTest {
 
         writeTokenBalance(address(cell), WAVAX, 100e18);
 
-        vm.assertEq(IERC20(WAVAX).balanceOf(address(cell)), 100e18);
+        vm.assertEq(ERC20(WAVAX).balanceOf(address(cell)), 100e18);
         mockReceiveTokens(address(cell), address(usdcTokenHome), 1e6, payload);
-        vm.assertEq(IERC20(WAVAX).balanceOf(address(cell)), 100e18);
+        vm.assertEq(ERC20(WAVAX).balanceOf(address(cell)), 100e18);
     }
 
     function test_Native_Initiate() public {
@@ -401,7 +401,7 @@ contract HopOnlyCellTest is BaseTest {
 
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
         vm.startPrank(vm.addr(123123));
-        IERC20(USDC).approve(address(cell), 1000e6);
+        ERC20(USDC).approve(address(cell), 1000e6);
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
         cell.initiate(USDC, 1000e6, instructions);
@@ -443,11 +443,11 @@ contract HopOnlyCellTest is BaseTest {
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
         vm.deal(vm.addr(123123), 1e18);
         vm.startPrank(vm.addr(123123));
-        IERC20(USDC).approve(address(cell), 1000e6);
+        ERC20(USDC).approve(address(cell), 1000e6);
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
         cell.initiate{value: 1 ether}(USDC, 1000e6, instructions);
         vm.assertEq(address(vm.addr(1)).balance, 1e18);
-        vm.assertEq(IERC20(USDC).balanceOf(vm.addr(1)), 10e6);
+        vm.assertEq(ERC20(USDC).balanceOf(vm.addr(1)), 10e6);
     }
 }

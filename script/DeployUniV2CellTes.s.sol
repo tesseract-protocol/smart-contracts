@@ -21,7 +21,7 @@ contract DeployUniV2CellTes is Script {
         address[] memory hopTokens = new address[](2);
         hopTokens[0] = WAVAX_TES;
         hopTokens[1] = USDC_TES;
-        UniV2Cell cell = new UniV2Cell(vm.addr(1), WTES, FACTORY, 3, 120_000, hopTokens, 3);
+        new UniV2Cell(vm.addr(1), WTES, FACTORY, 3, 120_000, hopTokens, 3);
 
         vm.stopBroadcast();
     }
