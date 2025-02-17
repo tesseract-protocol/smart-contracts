@@ -85,22 +85,26 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             revert InvalidInstructions();
         }
 
-        if (msg.value - fixedFee > 0) {
-            amount = msg.value - fixedFee;
+        (uint256 fixedNativeFee, uint256 baseFee) = calculateFees(amount);
+
+        if (msg.value < fixedNativeFee) {
+            revert InsufficientFeeReceived(fixedNativeFee, msg.value);
+        }
+
+        if (msg.value - fixedNativeFee > 0) {
+            amount = msg.value - fixedNativeFee;
             wrappedNativeToken.deposit{value: amount}();
             token = address(wrappedNativeToken);
         } else {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
-        emit Initiated(msg.sender, token, amount);
 
-        uint256 baseFee = amount * baseFeeBips / BIPS_DIVISOR;
         if (baseFee > 0) {
             IERC20(token).safeTransfer(feeCollector, baseFee);
             amount -= baseFee;
         }
-        if (fixedFee > 0) {
-            payable(feeCollector).sendValue(fixedFee);
+        if (fixedNativeFee > 0) {
+            payable(feeCollector).sendValue(fixedNativeFee);
         }
 
         CellPayload memory payload = CellPayload({
@@ -109,6 +113,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             sourceBlockchainID: blockchainID
         });
         _route(token, amount, payload, address(0), false);
+        emit Initiated(msg.sender, token, amount);
+    }
+
+    function calculateFees(uint256 amount) public view returns (uint256 fixedNativeFee, uint256 baseFee) {
+        return (fixedFee, amount * baseFeeBips / BIPS_DIVISOR);
     }
 
     /**

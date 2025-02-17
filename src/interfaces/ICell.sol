@@ -199,6 +199,7 @@ interface ICell {
      * error InvalidArgument - Thrown when constructor receives invalid arguments
      * error InvalidFeeCollectorUpdate - Thrown when trying to update fee collector to zero address
      * error InvalidBaseFeeUpdate - Thrown when trying to update base fee to a value greater than BIPS_DIVISOR
+     * error InsufficientFeeReceived - Thrown when initate is called with insuffcient fixed fee
      */
     error InvalidSender();
     error SwapAndRollbackFailed();
@@ -208,6 +209,7 @@ interface ICell {
     error InvalidArgument();
     error InvalidFeeCollectorUpdate();
     error InvalidBaseFeeUpdate();
+    error InsufficientFeeReceived(uint256 required, uint256 received);
 
     /**
      * @notice Initiates a cross-chain token operation with native or ERC20 token support
