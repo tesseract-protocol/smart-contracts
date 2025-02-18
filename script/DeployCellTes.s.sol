@@ -25,4 +25,4 @@ contract WarpMessengerMock {
     function getBlockchainID() external returns (bytes32 blockchainID) {}
 }
 
-// forge script --chain 732 script/DeployCellTes.s.sol:DeployCellTes --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv
+// forge script --chain 732 script/DeployCellTes.s.sol:DeployCellTes --rpc-url $TESCHAIN_RPC_URL --broadcast --skip-simulation -vvvv --optimize --optimizer-runs 200
