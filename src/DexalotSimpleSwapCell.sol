@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.25;
 
 import {Cell} from "./Cell.sol";
 import {IDexalotMainnetRFQ} from "./interfaces/IDexalotMainnetRFQ.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IWrappedNativeToken} from "@avalanche-interchain-token-transfer/interfaces/IWrappedNativeToken.sol";
+import {IWrappedNativeToken} from "@ictt/interfaces/IWrappedNativeToken.sol";
 
 /**
  * @title DexalotSimpleSwapCell
