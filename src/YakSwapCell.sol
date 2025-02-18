@@ -49,8 +49,6 @@ contract YakSwapCell is Cell {
         uint256 yakSwapFeeBips;
     }
 
-    uint256 public constant BIPS_DIVISOR = 10_000;
-
     /**
      * @notice YakRouter contract used for swap routing and execution
      * @dev Immutable reference to the YakRouter aggregation protocol
@@ -139,6 +137,7 @@ contract YakSwapCell is Cell {
         uint256 balanceBefore = token == tokenOut
             ? IERC20(tokenOut).balanceOf(address(this)) - amount
             : IERC20(tokenOut).balanceOf(address(this));
+        tradeData.trade.amountIn = amount;
         IERC20(token).forceApprove(address(router), amount);
         try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFeeBips) {
             success = true;

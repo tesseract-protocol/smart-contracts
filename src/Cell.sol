@@ -26,8 +26,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     using SafeERC20 for IERC20;
     using Address for address payable;
 
+    uint256 public constant BIPS_DIVISOR = 10_000;
+    uint256 public constant MAX_BASE_FEE = 500;
+
     IWrappedNativeToken public immutable wrappedNativeToken;
     bytes32 public immutable blockchainID;
+
+    uint256 public baseFeeBips;
+    uint256 public fixedFee;
+    address public feeCollector;
 
     /**
      * @notice Initializes the Cell contract with wrapped native token configuration
@@ -38,6 +45,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         if (owner == address(0) || wrappedNativeTokenAddress == address(0)) {
             revert InvalidArgument();
         }
+        feeCollector = owner;
         wrappedNativeToken = IWrappedNativeToken(wrappedNativeTokenAddress);
         blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
         transferOwnership(owner);
@@ -77,14 +85,27 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             revert InvalidInstructions();
         }
 
-        if (msg.value > 0) {
-            wrappedNativeToken.deposit{value: msg.value}();
+        (uint256 fixedNativeFee, uint256 baseFee) = calculateFees(amount);
+
+        if (msg.value < fixedNativeFee) {
+            revert InsufficientFeeReceived(fixedNativeFee, msg.value);
+        }
+
+        if (msg.value - fixedNativeFee > 0) {
+            amount = msg.value - fixedNativeFee;
+            wrappedNativeToken.deposit{value: amount}();
             token = address(wrappedNativeToken);
-            amount = msg.value;
         } else {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
-        emit Initiated(msg.sender, token, amount);
+
+        if (baseFee > 0) {
+            IERC20(token).safeTransfer(feeCollector, baseFee);
+            amount -= baseFee;
+        }
+        if (fixedNativeFee > 0) {
+            payable(feeCollector).sendValue(fixedNativeFee);
+        }
 
         CellPayload memory payload = CellPayload({
             instructions: instructions,
@@ -92,6 +113,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             sourceBlockchainID: blockchainID
         });
         _route(token, amount, payload, address(0), false);
+        emit Initiated(msg.sender, token, amount);
+    }
+
+    function calculateFees(uint256 amount) public view returns (uint256 fixedNativeFee, uint256 baseFee) {
+        return (fixedFee, amount * baseFeeBips / BIPS_DIVISOR);
     }
 
     /**
@@ -417,6 +443,39 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         } catch {
             return false;
         }
+    }
+
+    /**
+     * @notice Updates the fee collector address
+     * @param newFeeCollector The address of the new fee collector
+     */
+    function updateFeeCollector(address newFeeCollector) external onlyOwner {
+        if (newFeeCollector == address(0)) {
+            revert InvalidFeeCollectorUpdate();
+        }
+        feeCollector = newFeeCollector;
+        emit FeeCollectorUpdated(newFeeCollector);
+    }
+
+    /**
+     * @notice Updates the base fee in basis points (bips)
+     * @param newBaseFeeBips The new base fee in basis points
+     */
+    function updateBaseFeeBips(uint256 newBaseFeeBips) external onlyOwner {
+        if (newBaseFeeBips > MAX_BASE_FEE) {
+            revert InvalidBaseFeeUpdate();
+        }
+        baseFeeBips = newBaseFeeBips;
+        emit BaseFeeUpdated(newBaseFeeBips);
+    }
+
+    /**
+     * @notice Updates the fixed fee amount
+     * @param newFixedFee The new fixed fee amount
+     */
+    function updateFixedFee(uint256 newFixedFee) external onlyOwner {
+        fixedFee = newFixedFee;
+        emit FixedFeeUpdated(newFixedFee);
     }
 
     /**
