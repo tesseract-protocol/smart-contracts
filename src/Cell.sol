@@ -106,6 +106,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         if (fixedNativeFee > 0) {
             payable(feeCollector).sendValue(fixedNativeFee);
         }
+        if (baseFee > 0 || fixedNativeFee > 0) {
+            emit FeesPaid(msg.sender, feeCollector, fixedNativeFee, token, baseFee);
+        }
 
         CellPayload memory payload = CellPayload({
             instructions: instructions,

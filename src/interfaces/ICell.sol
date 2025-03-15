@@ -153,6 +153,14 @@ interface ICell {
      */
     event Initiated(address indexed sender, address indexed token, uint256 amount);
 
+    event FeesPaid(
+        address indexed sender,
+        address indexed collector,
+        uint256 nativeFeeAmount,
+        address baseFeeToken,
+        uint256 baseFeeAmount
+    );
+
     /**
      * @notice Emitted when tokens are returned due to operation failure
      * @dev Logs rollback operations for tracking failed transactions
