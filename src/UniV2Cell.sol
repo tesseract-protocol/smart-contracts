@@ -34,6 +34,7 @@ contract UniV2Cell is Cell {
 
     event HopTokensUpdated(address[] newHopTokens);
     event MaxHopsUpdated(uint256 newMaxHops);
+    event UniV2CellSwap();
 
     struct Extras {
         uint256 slippageBips;
@@ -72,12 +73,14 @@ contract UniV2Cell is Cell {
     constructor(
         address owner,
         address wrappedNativeToken,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion,
         address uniV2Factory,
         uint256 fee,
         uint256 estimatedSwapGas,
         address[] memory initialHopTokens,
         uint256 initialMaxHops
-    ) Cell(owner, wrappedNativeToken) {
+    ) Cell(owner, wrappedNativeToken, teleporterRegistry, minTeleporterVersion) {
         if (uniV2Factory == address(0)) {
             revert InvalidArgument();
         }
@@ -220,6 +223,8 @@ contract UniV2Cell is Cell {
         if (amountOut < trade.minAmountOut) {
             revert SlippageExceeded();
         }
+
+        emit UniV2CellSwap();
 
         return (true, tokenOut, amountOut);
     }

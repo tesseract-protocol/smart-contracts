@@ -3,6 +3,7 @@ src = "src"
 out = "out"
 solc = "0.8.25"
 libs = ["lib"]
+evm_version = "shanghai"
 
 [rpc_endpoints]
 fuji = "${FUJI_RPC_URL}"
@@ -10,5 +11,6 @@ tes = "${TESCHAIN_RPC_URL}"
 
 [fmt]
 int_types = "long"
+line_length = 120
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

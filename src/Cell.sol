@@ -15,6 +15,8 @@ import {INativeSendAndCallReceiver} from "@ictt/interfaces/INativeSendAndCallRec
 import {IWrappedNativeToken} from "@ictt/interfaces/IWrappedNativeToken.sol";
 import {TokenRemote} from "@ictt/TokenRemote/TokenRemote.sol";
 import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/interfaces/IWarpMessenger.sol";
+import {TeleporterRegistryOwnableApp} from "@teleporter/registry/TeleporterRegistryOwnableApp.sol";
+import {ITeleporterMessenger} from "@teleporter/ITeleporterMessenger.sol";
 
 /**
  * @title Cell
@@ -22,7 +24,7 @@ import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/inte
  * This contract implements the core functionality for cross-chain operations,
  * including token swaps, transfers, and multi-hop transactions.
  */
-abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, ReentrancyGuard, Ownable {
+abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, TeleporterRegistryOwnableApp {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -36,19 +38,33 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     uint256 public fixedFee;
     address public feeCollector;
 
+    uint256 public tesseractIDNonce;
+
+    struct RouteParams {
+        address token;
+        uint256 amount;
+        CellPayload payload;
+        address rollbackBridge;
+        bool rollbackNative;
+    }
+
     /**
      * @notice Initializes the Cell contract with wrapped native token configuration
      * @dev Sets up the contract with the wrapped native token address and retrieves the blockchain ID
      * @param wrappedNativeTokenAddress Address of the wrapped native token contract (e.g., WAVAX)
      */
-    constructor(address owner, address wrappedNativeTokenAddress) {
+    constructor(
+        address owner,
+        address wrappedNativeTokenAddress,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion
+    ) TeleporterRegistryOwnableApp(teleporterRegistry, owner, minTeleporterVersion) {
         if (owner == address(0) || wrappedNativeTokenAddress == address(0)) {
             revert InvalidArgument();
         }
         feeCollector = owner;
         wrappedNativeToken = IWrappedNativeToken(wrappedNativeTokenAddress);
         blockchainID = IWarpMessenger(0x0200000000000000000000000000000000000005).getBlockchainID();
-        transferOwnership(owner);
     }
 
     /**
@@ -110,13 +126,26 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             emit FeesPaid(msg.sender, feeCollector, fixedNativeFee, token, baseFee);
         }
 
+        tesseractIDNonce++;
+        bytes32 tesseractID = calculateTesseractID(tesseractIDNonce);
+
         CellPayload memory payload = CellPayload({
+            tesseractID: tesseractID,
             instructions: instructions,
             rollbackDestination: instructions.hops[0].bridgePath.bridgeSourceChain,
             sourceBlockchainID: blockchainID
         });
-        _route(token, amount, payload, address(0), false);
-        emit Initiated(msg.sender, token, amount);
+        _route(
+            RouteParams({
+                token: token,
+                amount: amount,
+                payload: payload,
+                rollbackBridge: address(0),
+                rollbackNative: false
+            })
+        );
+
+        emit Initiated(tesseractID, msg.sender, instructions.receiver, token, amount);
     }
 
     function calculateFees(uint256 amount) public view returns (uint256 fixedNativeFee, uint256 baseFee) {
@@ -164,7 +193,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         address originSenderAddress,
         bytes calldata payload
     ) external payable override nonReentrant {
-        emit CellReceivedNativeTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress);
+        emit CellReceivedNativeTokens(sourceBlockchainID, originTokenTransferrerAddress, originSenderAddress, msg.value);
         wrappedNativeToken.deposit{value: msg.value}();
         _receiveTokens(
             sourceBlockchainID, originTokenTransferrerAddress, address(wrappedNativeToken), msg.value, true, payload
@@ -194,7 +223,15 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             sourceBlockchainID == cellPayload.sourceBlockchainID
                 && originTokenTransferrerAddress == cellPayload.rollbackDestination
         ) ? msg.sender : address(0);
-        _route(token, amount, cellPayload, rollbackBridge, receivedNative);
+        _route(
+            RouteParams({
+                token: token,
+                amount: amount,
+                payload: cellPayload,
+                rollbackBridge: rollbackBridge,
+                rollbackNative: receivedNative
+            })
+        );
     }
 
     /**
@@ -241,50 +278,66 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     /**
      * @notice Routes the tokens based on the provided payload
      * @dev Handles swapping, transferring, and sending tokens across chains
-     * @param token The address of the token to route
-     * @param amount The amount of tokens to route
-     * @param payload The payload containing routing instructions
-     * @param rollbackBridge The address of the bridge to use for rollbacks
-     * @param rollbackNative Boolean indicating if the rollback should use native tokens
      */
-    function _route(
-        address token,
-        uint256 amount,
-        CellPayload memory payload,
-        address rollbackBridge,
-        bool rollbackNative
-    ) internal {
-        Hop memory hop = payload.instructions.hops[0];
+    function _route(RouteParams memory routeParams) internal {
+        Hop memory hop = routeParams.payload.instructions.hops[0];
+
+        address tokenOut = routeParams.token;
+        uint256 amountOut = routeParams.amount;
 
         if (hop.action == Action.SwapAndTransfer || hop.action == Action.SwapAndHop) {
-            (bool success, address tokenOut, uint256 amountOut) = _swap(token, amount, hop.trade);
-            if (success) {
-                token = tokenOut;
-                amount = amountOut;
-            } else if (rollbackBridge != address(0) && payload.instructions.rollbackTeleporterFee < amount) {
-                _rollback(token, amount, payload, rollbackBridge, rollbackNative);
+            bool success;
+            (success, tokenOut, amountOut) = _swap(routeParams.token, routeParams.amount, hop.trade);
+            if (
+                !success && routeParams.rollbackBridge != address(0)
+                    && routeParams.payload.instructions.rollbackTeleporterFee < routeParams.amount
+            ) {
+                _rollback(
+                    routeParams.token,
+                    routeParams.amount,
+                    routeParams.payload,
+                    routeParams.rollbackBridge,
+                    routeParams.rollbackNative
+                );
                 return;
-            } else {
+            } else if (!success) {
                 revert SwapAndRollbackFailed();
             }
         }
 
         if (
             (hop.action == Action.Hop || hop.action == Action.HopAndCall) && hop.bridgePath.sourceBridgeIsNative
-                && token != address(wrappedNativeToken)
+                && tokenOut != address(wrappedNativeToken)
         ) {
             revert InvalidInstructions();
         }
 
+        bytes32 messageID;
+
         if (hop.action == Action.SwapAndTransfer) {
-            _transfer(token, amount, payload);
+            _transfer(tokenOut, amountOut, routeParams.payload);
         } else if (
-            hop.action == Action.Hop || (hop.action == Action.SwapAndHop && payload.instructions.hops.length == 1)
+            hop.action == Action.Hop
+                || (hop.action == Action.SwapAndHop && routeParams.payload.instructions.hops.length == 1)
         ) {
-            _send(token, amount, payload);
+            messageID = _send(tokenOut, amountOut, routeParams.payload);
         } else {
-            _sendAndCall(token, amount, payload);
+            messageID = _sendAndCall(tokenOut, amountOut, routeParams.payload);
         }
+
+        emit CellRouted(
+            routeParams.payload.tesseractID,
+            messageID,
+            hop.action,
+            hop.action == Action.SwapAndTransfer ? address(0) : hop.bridgePath.bridgeSourceChain,
+            hop.action == Action.SwapAndTransfer ? bytes32(0) : hop.bridgePath.destinationBlockchainID,
+            hop.action == Action.HopAndCall ? hop.bridgePath.cellDestinationChain : address(0),
+            hop.action == Action.SwapAndTransfer ? address(0) : hop.bridgePath.bridgeDestinationChain,
+            routeParams.token,
+            routeParams.amount,
+            tokenOut,
+            amountOut
+        );
     }
 
     /**
@@ -312,7 +365,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param amount Amount of tokens to send
      * @param payload CellPayload containing bridge and contract call instructions
      */
-    function _sendAndCall(address token, uint256 amount, CellPayload memory payload) internal {
+    function _sendAndCall(address token, uint256 amount, CellPayload memory payload)
+        internal
+        returns (bytes32 messageID)
+    {
         Hop memory hop = payload.instructions.hops[0];
         bool isMultiHop = _isMultiHop(hop);
         SendAndCallInput memory input = SendAndCallInput({
@@ -328,6 +384,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             primaryFee: hop.bridgePath.teleporterFee,
             secondaryFee: isMultiHop ? hop.bridgePath.secondaryTeleporterFee : 0
         });
+
+        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter()).getNextMessageID(
+            hop.bridgePath.destinationBlockchainID
+        );
+
         if (hop.bridgePath.sourceBridgeIsNative) {
             wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
@@ -364,7 +425,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param amount Amount of tokens to send
      * @param payload CellPayload containing bridge instructions
      */
-    function _send(address token, uint256 amount, CellPayload memory payload) internal {
+    function _send(address token, uint256 amount, CellPayload memory payload) internal returns (bytes32 messageID) {
         Hop memory hop = payload.instructions.hops[0];
         bool isMultiHop = _isMultiHop(hop);
         SendTokensInput memory input = SendTokensInput({
@@ -377,6 +438,11 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             requiredGasLimit: hop.requiredGasLimit,
             multiHopFallback: isMultiHop ? payload.instructions.receiver : address(0)
         });
+
+        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter()).getNextMessageID(
+            hop.bridgePath.destinationBlockchainID
+        );
+
         if (hop.bridgePath.sourceBridgeIsNative) {
             wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
@@ -447,6 +513,20 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             return false;
         }
     }
+
+    function calculateTesseractID(uint256 nonce) public view returns (bytes32) {
+        return keccak256(abi.encode(address(this), blockchainID, nonce));
+    }
+
+    /**
+     * @dev Receives Teleporter messages and handles accordingly.
+     * This function should be overridden by contracts that inherit from this contract.
+     */
+    function _receiveTeleporterMessage(bytes32 sourceBlockchainID, address originSenderAddress, bytes memory message)
+        internal
+        virtual
+        override
+    {}
 
     /**
      * @notice Updates the fee collector address

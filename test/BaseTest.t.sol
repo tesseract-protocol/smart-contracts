@@ -22,6 +22,8 @@ abstract contract BaseTest is Test {
     address public constant USDC = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
     address public constant YAK = 0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7;
+    address public constant TELEPORTER_REGISTRY = 0x7C43605E14F391720e1b37E49C78C4b03A488d98;
+    uint256 public constant MIN_TELEPORTER_VERSION = 1;
     address public constant WARP_MESSENGER = 0x0200000000000000000000000000000000000005;
 
     ERC20TokenHome public usdcTokenHome;

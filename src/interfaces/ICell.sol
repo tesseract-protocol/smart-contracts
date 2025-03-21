@@ -10,6 +10,7 @@ pragma solidity 0.8.25;
  */
 struct CellPayload {
     Instructions instructions;
+    bytes32 tesseractID;
     bytes32 sourceBlockchainID;
     address rollbackDestination;
 }
@@ -141,7 +142,7 @@ interface ICell {
      * @custom:tracking Used for native token transfer tracking
      */
     event CellReceivedNativeTokens(
-        bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender
+        bytes32 indexed sourceBlockchainID, address indexed sourceBridge, address indexed originSender, uint256 amount
     );
 
     /**
@@ -151,7 +152,9 @@ interface ICell {
      * @param token Address of input token (indexed)
      * @param amount Number of tokens being processed
      */
-    event Initiated(address indexed sender, address indexed token, uint256 amount);
+    event Initiated(
+        bytes32 indexed tesseractId, address indexed sender, address indexed receiver, address token, uint256 amount
+    );
 
     event FeesPaid(
         address indexed sender,
@@ -159,6 +162,20 @@ interface ICell {
         uint256 nativeFeeAmount,
         address baseFeeToken,
         uint256 baseFeeAmount
+    );
+
+    event CellRouted(
+        bytes32 indexed tesseractID,
+        bytes32 indexed messageID,
+        Action action,
+        address indexed transferrer,
+        bytes32 destinationBlockchainID,
+        address destinationCell,
+        address destinationTransferrer,
+        address tokenIn,
+        uint256 amountIn,
+        address tokenOut,
+        uint256 amountOut
     );
 
     /**

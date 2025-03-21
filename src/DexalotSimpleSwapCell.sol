@@ -20,7 +20,7 @@ contract DexalotSimpleSwapCell is Cell {
 
     error SlippageExceeded();
 
-    event ValidationFailed(string indexed reason);
+    event DexalotCellSwap();
 
     /**
      * @notice Parameters for swap execution through Dexalot
@@ -44,9 +44,14 @@ contract DexalotSimpleSwapCell is Cell {
      * @param estimatedSwapGas Estimated gas cost for executing a swap
      * @param wrappedNativeToken Address of the wrapped native token (WAVAX)
      */
-    constructor(address owner, address mainnetRFQAddress, uint256 estimatedSwapGas, address wrappedNativeToken)
-        Cell(owner, wrappedNativeToken)
-    {
+    constructor(
+        address owner,
+        address wrappedNativeToken,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion,
+        address mainnetRFQAddress,
+        uint256 estimatedSwapGas
+    ) Cell(owner, wrappedNativeToken, teleporterRegistry, minTeleporterVersion) {
         if (mainnetRFQAddress == address(0)) {
             revert InvalidArgument();
         }
@@ -92,19 +97,15 @@ contract DexalotSimpleSwapCell is Cell {
         IDexalotMainnetRFQ.Order memory order = params.order;
 
         if (token != order.takerAsset && !(token == address(wrappedNativeToken) && order.takerAsset == address(0))) {
-            emit ValidationFailed("Invalid input token");
             return (false, address(0), 0);
         }
         if (amount != order.takerAmount) {
-            emit ValidationFailed("Invalid amounts");
             return (false, address(0), 0);
         }
         if (block.timestamp > order.expiry) {
-            emit ValidationFailed("Order expired");
             return (false, address(0), 0);
         }
         if (order.taker != address(this)) {
-            emit ValidationFailed("Invalid taker");
             return (false, address(0), 0);
         }
 
@@ -130,6 +131,7 @@ contract DexalotSimpleSwapCell is Cell {
                 if (amountOut < params.minAmountOut) revert SlippageExceeded();
             }
             success = true;
+            emit DexalotCellSwap();
         } catch {
             if (order.takerAsset == address(0)) {
                 wrappedNativeToken.deposit{value: nativeValue}();

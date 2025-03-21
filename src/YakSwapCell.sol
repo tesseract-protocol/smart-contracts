@@ -21,6 +21,8 @@ contract YakSwapCell is Cell {
     error InvalidSlippageBips();
     error NoRouteFound();
 
+    event YakSwapCellSwap(address[] indexed adapters);
+
     /**
      * @notice Configuration parameters for YakRouter swaps
      * @dev External parameters passed to customize swap behavior
@@ -61,7 +63,13 @@ contract YakSwapCell is Cell {
      * @param routerAddress Address of the YakRouter aggregation contract
      * @param wrappedNativeToken Address of the wrapped native token (e.g., WAVAX)
      */
-    constructor(address owner, address routerAddress, address wrappedNativeToken) Cell(owner, wrappedNativeToken) {
+    constructor(
+        address owner,
+        address wrappedNativeToken,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion,
+        address routerAddress
+    ) Cell(owner, wrappedNativeToken, teleporterRegistry, minTeleporterVersion) {
         if (routerAddress == address(0)) {
             revert InvalidArgument();
         }
@@ -142,6 +150,7 @@ contract YakSwapCell is Cell {
         try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFeeBips) {
             success = true;
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+            emit YakSwapCellSwap(tradeData.trade.adapters);
         } catch {
             IERC20(token).approve(address(router), 0);
         }

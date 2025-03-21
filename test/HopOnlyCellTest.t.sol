@@ -6,7 +6,7 @@ import "./../src/HopOnlyCell.sol";
 
 contract HopOnlyCellTest is BaseTest {
     function test_ERC20_SwapAndTransfer() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -33,8 +33,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), 1000e6, payload);
 
@@ -42,7 +46,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_SwapAndTransfer() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -69,8 +73,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         mockReceiveNative(address(cell), 100e18, payload);
 
@@ -78,7 +86,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_Hop() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -105,8 +113,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -114,7 +126,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_Hop() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -141,8 +153,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -150,7 +166,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_HopAndCall() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -177,8 +193,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -186,7 +206,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_HopAndCall() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -213,8 +233,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -222,7 +246,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_SwapAndHop() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -249,8 +273,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -258,7 +286,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_SwapAndHop() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -285,8 +313,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -294,7 +326,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_InvalidInstructions() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -321,8 +353,12 @@ contract HopOnlyCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         writeTokenBalance(address(cell), WAVAX, 100e18);
 
@@ -332,7 +368,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_Native_Initiate() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         vm.startPrank(vm.addr(1));
         cell.updateFixedFee(1e18);
@@ -372,7 +408,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_Initiate() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -408,7 +444,7 @@ contract HopOnlyCellTest is BaseTest {
     }
 
     function test_ERC20_InitiateWithFees() public {
-        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX);
+        HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
         vm.startPrank(vm.addr(1));
         cell.updateFixedFee(1e18);
