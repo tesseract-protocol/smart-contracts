@@ -21,6 +21,8 @@ contract YakSwapCell is Cell {
     error InvalidSlippageBips();
     error NoRouteFound();
 
+    event YakSwapCellSwap(address[] indexed adapters);
+
     /**
      * @notice Configuration parameters for YakRouter swaps
      * @dev External parameters passed to customize swap behavior
@@ -49,8 +51,6 @@ contract YakSwapCell is Cell {
         uint256 yakSwapFeeBips;
     }
 
-    uint256 public constant BIPS_DIVISOR = 10_000;
-
     /**
      * @notice YakRouter contract used for swap routing and execution
      * @dev Immutable reference to the YakRouter aggregation protocol
@@ -63,7 +63,13 @@ contract YakSwapCell is Cell {
      * @param routerAddress Address of the YakRouter aggregation contract
      * @param wrappedNativeToken Address of the wrapped native token (e.g., WAVAX)
      */
-    constructor(address owner, address routerAddress, address wrappedNativeToken) Cell(owner, wrappedNativeToken) {
+    constructor(
+        address owner,
+        address wrappedNativeToken,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion,
+        address routerAddress
+    ) Cell(owner, wrappedNativeToken, teleporterRegistry, minTeleporterVersion) {
         if (routerAddress == address(0)) {
             revert InvalidArgument();
         }
@@ -139,10 +145,12 @@ contract YakSwapCell is Cell {
         uint256 balanceBefore = token == tokenOut
             ? IERC20(tokenOut).balanceOf(address(this)) - amount
             : IERC20(tokenOut).balanceOf(address(this));
+        tradeData.trade.amountIn = amount;
         IERC20(token).forceApprove(address(router), amount);
         try IYakRouter(router).swapNoSplit(tradeData.trade, address(this), tradeData.yakSwapFeeBips) {
             success = true;
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+            emit YakSwapCellSwap(tradeData.trade.adapters);
         } catch {
             IERC20(token).approve(address(router), 0);
         }

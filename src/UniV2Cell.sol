@@ -5,6 +5,7 @@ import {Cell} from "./Cell.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IUniswapFactory, IUniswapPair} from "./interfaces/IUniswapV2.sol";
+import {UniV2Router} from "./lib/UniV2Router.sol";
 
 /**
  * @title UniV2Cell
@@ -22,7 +23,6 @@ contract UniV2Cell is Cell {
     error MaxHopsExceeded();
 
     uint256 internal constant FEE_DENOMINATOR = 1e3;
-    uint256 public constant BIPS_DIVISOR = 10_000;
     uint256 public constant MAX_ALLOWED_HOPS = 5;
 
     uint256 public immutable feeCompliment;
@@ -34,6 +34,7 @@ contract UniV2Cell is Cell {
 
     event HopTokensUpdated(address[] newHopTokens);
     event MaxHopsUpdated(uint256 newMaxHops);
+    event UniV2CellSwap();
 
     struct Extras {
         uint256 slippageBips;
@@ -72,12 +73,14 @@ contract UniV2Cell is Cell {
     constructor(
         address owner,
         address wrappedNativeToken,
+        address teleporterRegistry,
+        uint256 minTeleporterVersion,
         address uniV2Factory,
         uint256 fee,
         uint256 estimatedSwapGas,
         address[] memory initialHopTokens,
         uint256 initialMaxHops
-    ) Cell(owner, wrappedNativeToken) {
+    ) Cell(owner, wrappedNativeToken, teleporterRegistry, minTeleporterVersion) {
         if (uniV2Factory == address(0)) {
             revert InvalidArgument();
         }
@@ -154,7 +157,8 @@ contract UniV2Cell is Cell {
             revert InvalidParameters();
         }
 
-        (address[] memory path, uint256 amountOut) = _findBestPath(amountIn, tokenIn, tokenOut);
+        (address[] memory path, uint256 amountOut) =
+            UniV2Router.findBestPath(factory, feeCompliment, amountIn, tokenIn, tokenOut, hopTokens, maxHops);
         if (path.length == 0 || amountOut == 0) {
             revert NoRouteFound();
         }
@@ -220,178 +224,9 @@ contract UniV2Cell is Cell {
             revert SlippageExceeded();
         }
 
+        emit UniV2CellSwap();
+
         return (true, tokenOut, amountOut);
-    }
-
-    /**
-     * @notice Finds the optimal trading path between two tokens
-     * @param amountIn Amount of input tokens
-     * @param tokenIn Address of input token
-     * @param tokenOut Address of desired output token
-     * @return bestPath Array of token addresses representing the optimal path
-     * @return bestAmountOut Expected amount of output tokens
-     */
-    function _findBestPath(uint256 amountIn, address tokenIn, address tokenOut)
-        internal
-        view
-        returns (address[] memory bestPath, uint256 bestAmountOut)
-    {
-        PathState memory state;
-        state.queue = new Route[](maxHops * hopTokens.length + 1);
-        state.visitedTokens = new address[](maxHops + 2);
-        state.visitedTokens[state.visitedCount++] = tokenIn;
-
-        address directPair = IUniswapFactory(factory).getPair(tokenIn, tokenOut);
-        if (directPair != address(0)) {
-            bestPath = new address[](2);
-            bestPath[0] = tokenIn;
-            bestPath[1] = tokenOut;
-            bestAmountOut = _getAmountOut(directPair, tokenIn, tokenOut, amountIn);
-        }
-
-        address[] memory initialPath = new address[](1);
-        initialPath[0] = tokenIn;
-        state.queue[state.queueEnd++] = Route({path: initialPath, amountOut: amountIn, hops: 0});
-
-        (address[] memory explorePath, uint256 exploreAmount) = _explorePaths(tokenOut, state);
-
-        if (exploreAmount > bestAmountOut) {
-            bestPath = explorePath;
-            bestAmountOut = exploreAmount;
-        }
-
-        if (bestPath.length == 0) revert NoRouteFound();
-        return (bestPath, bestAmountOut);
-    }
-
-    /**
-     * @notice Core path exploration logic using breadth-first search
-     * @param tokenOut Address of desired output token
-     * @param state Current path exploration state
-     * @return bestPath Array of token addresses representing the optimal path
-     * @return bestAmountOut Expected amount of output tokens
-     */
-    function _explorePaths(address tokenOut, PathState memory state)
-        internal
-        view
-        returns (address[] memory bestPath, uint256 bestAmountOut)
-    {
-        while (state.queueStart < state.queueEnd) {
-            Route memory currentRoute = state.queue[state.queueStart++];
-            if (currentRoute.hops >= maxHops) continue;
-
-            address currentToken = currentRoute.path[currentRoute.path.length - 1];
-
-            for (uint256 i = 0; i < hopTokens.length; i++) {
-                address hopToken = hopTokens[i];
-
-                if (_isTokenVisited(hopToken, state) || hopToken == currentToken || hopToken == tokenOut) continue;
-
-                address hopPair = IUniswapFactory(factory).getPair(currentToken, hopToken);
-                if (hopPair == address(0)) continue;
-
-                uint256 hopAmount = _getAmountOut(hopPair, currentToken, hopToken, currentRoute.amountOut);
-                if (hopAmount == 0) continue;
-
-                address finalPair = IUniswapFactory(factory).getPair(hopToken, tokenOut);
-                if (finalPair != address(0)) {
-                    uint256 finalAmount = _getAmountOut(finalPair, hopToken, tokenOut, hopAmount);
-                    if (finalAmount > bestAmountOut) {
-                        bestAmountOut = finalAmount;
-                        bestPath = _buildPath(currentRoute.path, hopToken, tokenOut);
-                    }
-                }
-
-                if (currentRoute.hops + 1 < maxHops) {
-                    state.queue[state.queueEnd++] = Route({
-                        path: _buildPath(currentRoute.path, hopToken),
-                        amountOut: hopAmount,
-                        hops: currentRoute.hops + 1
-                    });
-
-                    if (state.visitedCount < state.visitedTokens.length) {
-                        state.visitedTokens[state.visitedCount++] = hopToken;
-                    }
-                }
-            }
-        }
-
-        return (bestPath, bestAmountOut);
-    }
-
-    /**
-     * @notice Creates a new path array by appending tokens to an existing path
-     * @param currentPath Current array of token addresses
-     * @param newToken Token address to append
-     * @param finalToken Final token address to append
-     * @return New path array with appended tokens
-     */
-    function _buildPath(address[] memory currentPath, address newToken, address finalToken)
-        internal
-        pure
-        returns (address[] memory)
-    {
-        address[] memory newPath = new address[](currentPath.length + 2);
-
-        for (uint256 i = 0; i < currentPath.length; i++) {
-            newPath[i] = currentPath[i];
-        }
-        newPath[currentPath.length] = newToken;
-        newPath[currentPath.length + 1] = finalToken;
-
-        return newPath;
-    }
-
-    /**
-     * @notice Creates a new path array by appending a single token
-     * @param currentPath Current array of token addresses
-     * @param newToken Token address to append
-     * @return New path array with appended token
-     */
-    function _buildPath(address[] memory currentPath, address newToken) internal pure returns (address[] memory) {
-        address[] memory newPath = new address[](currentPath.length + 1);
-
-        for (uint256 i = 0; i < currentPath.length; i++) {
-            newPath[i] = currentPath[i];
-        }
-        newPath[currentPath.length] = newToken;
-
-        return newPath;
-    }
-
-    /**
-     * @notice Checks if a token has already been visited in the current path
-     * @param token Token address to check
-     * @param state Current path exploration state
-     * @return bool True if token has been visited
-     */
-    function _isTokenVisited(address token, PathState memory state) internal pure returns (bool) {
-        for (uint256 i = 0; i < state.visitedCount; i++) {
-            if (state.visitedTokens[i] == token) return true;
-        }
-        return false;
-    }
-
-    /**
-     * @notice Calculates the output amount for a single swap
-     * @param pair Address of the trading pair contract
-     * @param tokenIn Address of input token
-     * @param tokenOut Address of output token
-     * @param amountIn Amount of input tokens
-     * @return amountOut Expected amount of output tokens
-     */
-    function _getAmountOut(address pair, address tokenIn, address tokenOut, uint256 amountIn)
-        internal
-        view
-        returns (uint256 amountOut)
-    {
-        (uint256 r0, uint256 r1,) = IUniswapPair(pair).getReserves();
-        (uint256 reserveIn, uint256 reserveOut) = tokenIn < tokenOut ? (r0, r1) : (r1, r0);
-
-        uint256 amountInWithFee = amountIn * feeCompliment;
-        uint256 numerator = amountInWithFee * reserveOut;
-        uint256 denominator = reserveIn * FEE_DENOMINATOR + amountInWithFee;
-        amountOut = numerator / denominator;
     }
 
     /**
@@ -408,7 +243,7 @@ contract UniV2Cell is Cell {
         for (uint256 i = 0; i < path.length - 1; i++) {
             address pair = IUniswapFactory(factory).getPair(path[i], path[i + 1]);
             if (pair == address(0)) revert NoRouteFound();
-            amounts[i + 1] = _getAmountOut(pair, path[i], path[i + 1], amounts[i]);
+            amounts[i + 1] = UniV2Router.getAmountOut(pair, path[i], path[i + 1], amounts[i], feeCompliment);
         }
     }
 }

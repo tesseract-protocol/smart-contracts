@@ -2,16 +2,19 @@
 cache/
 out/
 
-# Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
-/broadcast/WavaxToUsdcSwap.s.sol
-/broadcast/WavaxToTesSwap.s.sol
-/broadcast/SwapRollback.s.sol
-
 # Docs
 docs/
 
 # Dotenv file
 .env
+broadcast/*
+
+!broadcast/DeployCellCoqnet.s.sol
+broadcast/DeployCellCoqnet.s.sol/42069/*
+!broadcast/DeployCellCoqnet.s.sol/42069/run-latest.json
+
+!broadcast/DeployCellCchain.s.sol
+broadcast/DeployCellCchain.s.sol/43114/*
+!broadcast/DeployCellCchain.s.sol/43114/run-latest.json
+
+.DS_Store

@@ -8,7 +8,7 @@ import "@ictt/TokenHome/NativeTokenHome.sol";
 import "@ictt/interfaces/ITokenTransferrer.sol";
 import "@ictt/interfaces/IERC20TokenTransferrer.sol";
 import "@ictt/interfaces/INativeTokenTransferrer.sol";
-import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "@ictt/WrappedNativeToken.sol";
 import "./mocks/TeleporterRegistryMock.sol";
 import "./mocks/WarpMessengerMock.sol";
 
@@ -22,6 +22,8 @@ abstract contract BaseTest is Test {
     address public constant USDC = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
     address public constant YAK = 0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7;
+    address public constant TELEPORTER_REGISTRY = 0x7C43605E14F391720e1b37E49C78C4b03A488d98;
+    uint256 public constant MIN_TELEPORTER_VERSION = 1;
     address public constant WARP_MESSENGER = 0x0200000000000000000000000000000000000005;
 
     ERC20TokenHome public usdcTokenHome;
@@ -39,7 +41,9 @@ abstract contract BaseTest is Test {
         teleporterRegistry = new TeleporterRegistryMock();
         usdcTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, USDC, 6);
         wavaxTokenHome = new ERC20TokenHome(address(teleporterRegistry), address(this), 1, WAVAX, 18);
-        nativeTokenHome = new NativeTokenHome(address(teleporterRegistry), address(this), 1, WAVAX);
+        WrappedNativeToken wrappedNativeToken = new WrappedNativeToken("WAVAX");
+        nativeTokenHome =
+            new NativeTokenHome(address(teleporterRegistry), address(this), 1, address(wrappedNativeToken));
         randomRemoteAddress = vm.addr(123456);
 
         fundBridge(address(usdcTokenHome), USDC, 6);
@@ -114,7 +118,7 @@ abstract contract BaseTest is Test {
             requiredGasLimit: 400_000,
             multiHopFallback: address(0)
         });
-        INativeTokenTransferrer(tokenHome).send{value: 1_000_000 * 10 ** decimals}(input);
+        INativeTokenTransferrer(tokenHome).send{value: 100_000 * 10 ** decimals}(input);
     }
 
     function fundBridge(address tokenHome, address token, uint8 decimals) internal {
@@ -143,11 +147,11 @@ abstract contract BaseTest is Test {
             multiHopFallback: address(0)
         });
         writeTokenBalance(address(this), token, 1_000_000 * 10 ** decimals);
-        IERC20(token).approve(tokenHome, 1_000_000 * 10 ** decimals);
+        ERC20(token).approve(tokenHome, 1_000_000 * 10 ** decimals);
         IERC20TokenTransferrer(tokenHome).send(input, 1_000_000 * 10 ** decimals);
     }
 
     function writeTokenBalance(address _receiver, address _token, uint256 _amount) internal {
-        stdstore.target(_token).sig(IERC20(_token).balanceOf.selector).with_key(_receiver).checked_write(_amount);
+        stdstore.target(_token).sig(ERC20(_token).balanceOf.selector).with_key(_receiver).checked_write(_amount);
     }
 }

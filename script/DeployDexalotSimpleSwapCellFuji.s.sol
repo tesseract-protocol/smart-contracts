@@ -11,6 +11,8 @@ contract DeployDexalotSimpleSwapCellFuji is Script {
     address constant MAINNET_RFQ = 0x1f06d7533890dBD67106Fee55FA9693D412e7551; // Replace with actual RFQ address
     uint256 constant SWAP_GAS_ESTIMATE = 125_000; // Approximate gas used for a swap
     address constant WRAPPED_NATIVE_TOKEN = 0xd00ae08403B9bbb9124bB305C09058E32C39A48c; // WAVAX on Avalanche C-Chain
+    address public constant TELEPORTER_REGISTRY = 0xF86Cb19Ad8405AEFa7d09C778215D2Cb6eBfB228;
+    uint256 public constant MIN_TELEPORTER_VERSION = 1;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -22,8 +24,14 @@ contract DeployDexalotSimpleSwapCellFuji is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy contract
-        DexalotSimpleSwapCell cell =
-            new DexalotSimpleSwapCell(deployerAddress, MAINNET_RFQ, SWAP_GAS_ESTIMATE, WRAPPED_NATIVE_TOKEN);
+        DexalotSimpleSwapCell cell = new DexalotSimpleSwapCell(
+            deployerAddress,
+            WRAPPED_NATIVE_TOKEN,
+            TELEPORTER_REGISTRY,
+            MIN_TELEPORTER_VERSION,
+            MAINNET_RFQ,
+            SWAP_GAS_ESTIMATE
+        );
 
         vm.stopBroadcast();
 

@@ -8,7 +8,8 @@ contract YakSwapCellTest is BaseTest {
     address public YAK_SWAP_ROUTER = 0xC4729E56b831d74bBc18797e0e17A295fA77488c;
 
     function test_ERC20_ERC20_SwapAndTransfer() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 100e18;
         YakSwapCell.Extras memory extras =
@@ -43,8 +44,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         mockReceiveTokens(address(cell), address(wavaxTokenHome), amountIn, payload);
 
@@ -52,7 +57,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_Native_ERC20_SwapAndTransfer() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 10e18;
         YakSwapCell.Extras memory extras =
@@ -87,8 +93,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         mockReceiveNative(address(cell), amountIn, payload);
 
@@ -96,7 +106,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_Native_SwapAndTransfer() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
@@ -131,8 +142,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), amountIn, payload);
 
@@ -140,7 +155,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_Hop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -167,8 +183,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -176,7 +196,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_Native_Hop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -203,8 +224,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -212,7 +237,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_Native_ERC20_Hop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -239,8 +265,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -248,7 +278,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_HopAndCall() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -275,8 +306,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -284,7 +319,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_Native_HopAndCall() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -311,8 +347,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -320,7 +360,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_Native_ERC20_HopAndCall() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
@@ -346,8 +387,12 @@ contract YakSwapCellTest is BaseTest {
             payableReceiver: true,
             hops: hops
         });
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -355,7 +400,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_ERC20_SwapAndHop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
@@ -390,8 +436,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -399,7 +449,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_ERC20_Native_SwapAndHop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 1000e6;
         YakSwapCell.Extras memory extras =
@@ -434,8 +485,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
@@ -443,7 +498,8 @@ contract YakSwapCellTest is BaseTest {
     }
 
     function test_Native_ERC20_SwapAndHop() public {
-        YakSwapCell cell = new YakSwapCell(vm.addr(1), YAK_SWAP_ROUTER, WAVAX);
+        YakSwapCell cell =
+            new YakSwapCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_SWAP_ROUTER);
 
         uint256 amountIn = 10e18;
         YakSwapCell.Extras memory extras =
@@ -478,8 +534,12 @@ contract YakSwapCellTest is BaseTest {
             hops: hops
         });
 
-        CellPayload memory payload =
-            CellPayload({instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)});
+        CellPayload memory payload = CellPayload({
+            tesseractID: "",
+            instructions: instructions,
+            sourceBlockchainID: "",
+            rollbackDestination: address(0)
+        });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
