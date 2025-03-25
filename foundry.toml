@@ -4,6 +4,8 @@ out = "out"
 solc = "0.8.25"
 libs = ["lib"]
 evm_version = "shanghai"
+optimizer = true
+optimizer-runs = 200
 
 [rpc_endpoints]
 fuji = "${FUJI_RPC_URL}"
