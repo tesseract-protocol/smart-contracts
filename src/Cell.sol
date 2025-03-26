@@ -4,8 +4,6 @@ pragma solidity 0.8.25;
 import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./interfaces/ICell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20TokenTransferrer} from "@ictt/interfaces/IERC20TokenTransferrer.sol";
 import {IERC20SendAndCallReceiver} from "@ictt/interfaces/IERC20SendAndCallReceiver.sol";
 import {SendAndCallInput, SendTokensInput} from "@ictt/interfaces/ITokenTransferrer.sol";
@@ -28,8 +26,18 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
     using SafeERC20 for IERC20;
     using Address for address payable;
 
+    bytes32 public constant CCHAIN_BLOCKCHAIN_ID = 0x0427d4b22a2a78bcddd456742caf91b56badbff985ee19aef14573e7343fd652;
     uint256 public constant BIPS_DIVISOR = 10_000;
     uint256 public constant MAX_BASE_FEE = 500;
+
+    // Message type definitions for Teleporter messages
+    enum AdminMessageType {
+        UPDATE_FEE_COLLECTOR,
+        UPDATE_BASE_FEE_BIPS,
+        UPDATE_FIXED_FEE,
+        RECOVER_ERC20,
+        RECOVER_NATIVE
+    }
 
     IWrappedNativeToken public immutable wrappedNativeToken;
     bytes32 public immutable blockchainID;
@@ -520,19 +528,68 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
     /**
      * @dev Receives Teleporter messages and handles accordingly.
-     * This function should be overridden by contracts that inherit from this contract.
+     * This function processes admin actions received via Teleporter.
+     * Only the contract owner can send admin messages.
      */
     function _receiveTeleporterMessage(bytes32 sourceBlockchainID, address originSenderAddress, bytes memory message)
         internal
         virtual
         override
-    {}
+    {
+        if (msg.sender != address(teleporterRegistry.getLatestTeleporter())) {
+            revert InvalidSender();
+        }
+
+        if (sourceBlockchainID != CCHAIN_BLOCKCHAIN_ID) {
+            revert InvalidSender();
+        }
+
+        if (originSenderAddress != owner()) {
+            revert InvalidSender();
+        }
+
+        (AdminMessageType messageType, bytes memory payload) = abi.decode(message, (AdminMessageType, bytes));
+
+        if (messageType == AdminMessageType.UPDATE_FEE_COLLECTOR) {
+            address newFeeCollector = abi.decode(payload, (address));
+            _updateFeeCollector(newFeeCollector);
+        } else if (messageType == AdminMessageType.UPDATE_BASE_FEE_BIPS) {
+            uint256 newBaseFeeBips = abi.decode(payload, (uint256));
+            _updateBaseFeeBips(newBaseFeeBips);
+        } else if (messageType == AdminMessageType.UPDATE_FIXED_FEE) {
+            uint256 newFixedFee = abi.decode(payload, (uint256));
+            _updateFixedFee(newFixedFee);
+        } else if (messageType == AdminMessageType.RECOVER_ERC20) {
+            (
+                address token,
+                uint256 amount,
+                address sourceTransferrer,
+                address destinationTransferrer,
+                uint256 recoveryGasLimit,
+                uint256 teleporterFee
+            ) = abi.decode(payload, (address, uint256, address, address, uint256, uint256));
+            _recoverERC20(token, amount, sourceTransferrer, destinationTransferrer, recoveryGasLimit, teleporterFee);
+        } else if (messageType == AdminMessageType.RECOVER_NATIVE) {
+            (
+                uint256 amount,
+                address sourceTransferrer,
+                address destinationTransferrer,
+                uint256 recoveryGasLimit,
+                uint256 teleporterFee
+            ) = abi.decode(payload, (uint256, address, address, uint256, uint256));
+            _recoverNative(amount, sourceTransferrer, destinationTransferrer, recoveryGasLimit, teleporterFee);
+        }
+    }
 
     /**
      * @notice Updates the fee collector address
      * @param newFeeCollector The address of the new fee collector
      */
     function updateFeeCollector(address newFeeCollector) external onlyOwner {
+        _updateFeeCollector(newFeeCollector);
+    }
+
+    function _updateFeeCollector(address newFeeCollector) private {
         if (newFeeCollector == address(0)) {
             revert InvalidFeeCollectorUpdate();
         }
@@ -545,6 +602,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param newBaseFeeBips The new base fee in basis points
      */
     function updateBaseFeeBips(uint256 newBaseFeeBips) external onlyOwner {
+        _updateBaseFeeBips(newBaseFeeBips);
+    }
+
+    function _updateBaseFeeBips(uint256 newBaseFeeBips) private {
         if (newBaseFeeBips > MAX_BASE_FEE) {
             revert InvalidBaseFeeUpdate();
         }
@@ -557,6 +618,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @param newFixedFee The new fixed fee amount
      */
     function updateFixedFee(uint256 newFixedFee) external onlyOwner {
+        _updateFixedFee(newFixedFee);
+    }
+
+    function _updateFixedFee(uint256 newFixedFee) private {
         fixedFee = newFixedFee;
         emit FixedFeeUpdated(newFixedFee);
     }
@@ -579,7 +644,26 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         if (amount == 0) {
             revert InvalidAmount();
         }
-        IERC20(token).safeTransfer(msg.sender, amount);
+        IERC20(token).safeTransfer(owner(), amount);
+        emit Recovered(token, amount);
+    }
+
+    function _recoverERC20(
+        address token,
+        uint256 amount,
+        address sourceTransferrer,
+        address destinationTransferrer,
+        uint256 recoveryGasLimit,
+        uint256 teleporterFee
+    ) private {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+
+        _sendTokenToCChain(
+            false, token, amount, owner(), sourceTransferrer, destinationTransferrer, recoveryGasLimit, teleporterFee
+        );
+
         emit Recovered(token, amount);
     }
 
@@ -600,7 +684,68 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         if (amount == 0) {
             revert InvalidAmount();
         }
-        payable(msg.sender).sendValue(amount);
+        payable(owner()).sendValue(amount);
         emit Recovered(address(0), amount);
+    }
+
+    function _recoverNative(
+        uint256 amount,
+        address sourceTransferrer,
+        address destinationTransferrer,
+        uint256 recoveryGasLimit,
+        uint256 teleporterFee
+    ) private {
+        if (amount == 0) {
+            revert InvalidAmount();
+        }
+
+        _sendTokenToCChain(
+            true,
+            address(wrappedNativeToken),
+            amount,
+            owner(),
+            sourceTransferrer,
+            destinationTransferrer,
+            recoveryGasLimit,
+            teleporterFee
+        );
+
+        emit Recovered(address(0), amount);
+    }
+
+    function _sendTokenToCChain(
+        bool native,
+        address token,
+        uint256 amount,
+        address recipient,
+        address sourceTransferrer,
+        address destinationTransferrer,
+        uint256 recoveryGasLimit,
+        uint256 teleporterFee
+    ) private {
+        SendTokensInput memory input = SendTokensInput({
+            destinationBlockchainID: CCHAIN_BLOCKCHAIN_ID,
+            destinationTokenTransferrerAddress: destinationTransferrer,
+            recipient: recipient,
+            primaryFeeTokenAddress: token,
+            primaryFee: teleporterFee,
+            secondaryFee: 0,
+            requiredGasLimit: recoveryGasLimit,
+            multiHopFallback: address(0)
+        });
+
+        if (native) {
+            uint256 balance = IERC20(address(wrappedNativeToken)).balanceOf(address(this));
+            if (balance > teleporterFee) {
+                wrappedNativeToken.withdraw(balance - teleporterFee);
+            } else if (balance < teleporterFee) {
+                wrappedNativeToken.deposit{value: teleporterFee - balance}();
+            }
+            IERC20(token).forceApprove(sourceTransferrer, teleporterFee);
+            INativeTokenTransferrer(sourceTransferrer).send{value: amount - teleporterFee}(input);
+        } else {
+            IERC20(token).forceApprove(sourceTransferrer, amount);
+            IERC20TokenTransferrer(sourceTransferrer).send(input, amount - teleporterFee);
+        }
     }
 }
