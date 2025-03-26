@@ -7,6 +7,10 @@ docs/
 
 # Dotenv file
 .env
+
+# MacOS
+.DS_Store
+
 broadcast/*
 
 !broadcast/DeployCellCoqnet.s.sol
@@ -16,5 +20,4 @@ broadcast/DeployCellCoqnet.s.sol/42069/*
 !broadcast/DeployCellCchain.s.sol
 broadcast/DeployCellCchain.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol/43114/run-latest.json
-
-.DS_Store
+/script/tests
