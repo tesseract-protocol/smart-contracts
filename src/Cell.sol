@@ -101,7 +101,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             revert InvalidInstructions();
         }
 
-        (uint256 fixedNativeFee, uint256 baseFee) = calculateFees(amount);
+        (uint256 fixedNativeFee, uint256 baseFee) = calculateFees(instructions, amount);
 
         if (msg.value < fixedNativeFee) {
             revert InsufficientFeeReceived(fixedNativeFee, msg.value);
@@ -145,11 +145,17 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             })
         );
 
-        emit Initiated(tesseractID, msg.sender, instructions.receiver, token, amount);
+        emit Initiated(tesseractID, instructions.sourceId, msg.sender, instructions.receiver, token, amount);
     }
 
-    function calculateFees(uint256 amount) public view returns (uint256 fixedNativeFee, uint256 baseFee) {
-        return (fixedFee, amount * baseFeeBips / BIPS_DIVISOR);
+    function calculateFees(Instructions memory instructions, uint256 amount)
+        public
+        view
+        returns (uint256 fixedNativeFee, uint256 baseFee)
+    {
+        if (instructions.hops[0].action != Action.Hop) {
+            return (fixedFee, amount * baseFeeBips / BIPS_DIVISOR);
+        }
     }
 
     /**

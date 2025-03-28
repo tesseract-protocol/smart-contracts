@@ -18,6 +18,7 @@ struct CellPayload {
 /**
  * @notice Detailed instructions for cross-chain operations
  * @dev Defines the complete path and parameters for token movement across chains
+ * @param sourceId Unique identifier for the source frontend
  * @param receiver Address that will receive the final tokens
  * @param payableReceiver Boolean indicating if receiver can/should receive native tokens
  * @param rollbackTeleporterFee Amount of input token for rollback operation fees
@@ -25,6 +26,7 @@ struct CellPayload {
  * @param hops Ordered array of Hop structures defining the complete operation path
  */
 struct Instructions {
+    uint256 sourceId;
     address receiver;
     bool payableReceiver;
     uint256 rollbackTeleporterFee;
@@ -153,7 +155,12 @@ interface ICell {
      * @param amount Number of tokens being processed
      */
     event Initiated(
-        bytes32 indexed tesseractId, address indexed sender, address indexed receiver, address token, uint256 amount
+        bytes32 indexed tesseractId,
+        uint256 indexed sourceId,
+        address indexed sender,
+        address receiver,
+        address token,
+        uint256 amount
     );
 
     event FeesPaid(
