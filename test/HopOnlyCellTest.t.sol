@@ -30,7 +30,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -70,7 +71,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -110,7 +112,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -150,7 +153,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -190,7 +194,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -230,7 +235,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -270,7 +276,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -310,7 +317,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -350,7 +358,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         CellPayload memory payload = CellPayload({
@@ -396,7 +405,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         vm.deal(vm.addr(123123), 100e18);
@@ -404,7 +414,7 @@ contract HopOnlyCellTest is BaseTest {
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
         cell.initiate{value: 10 ether}(address(0), 0, instructions);
-        vm.assertEq(address(vm.addr(1)).balance, 1e18);
+        vm.assertEq(address(vm.addr(1)).balance, 0);
     }
 
     function test_ERC20_Initiate() public {
@@ -432,7 +442,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
@@ -453,7 +464,7 @@ contract HopOnlyCellTest is BaseTest {
 
         Hop[] memory hops = new Hop[](1);
         hops[0] = Hop({
-            action: Action.Hop,
+            action: Action.HopAndCall,
             requiredGasLimit: 900_000,
             recipientGasLimit: 450_000,
             trade: "",
@@ -473,7 +484,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
             payableReceiver: true,
-            hops: hops
+            hops: hops,
+            sourceId: 1
         });
 
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
