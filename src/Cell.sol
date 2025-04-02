@@ -17,6 +17,7 @@ import {TokenRemote} from "@ictt/TokenRemote/TokenRemote.sol";
 import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/interfaces/IWarpMessenger.sol";
 import {TeleporterRegistryOwnableApp} from "@teleporter/registry/TeleporterRegistryOwnableApp.sol";
 import {ITeleporterMessenger} from "@teleporter/ITeleporterMessenger.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title Cell
@@ -122,19 +123,16 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         if (fixedNativeFee > 0) {
             payable(feeCollector).sendValue(fixedNativeFee);
         }
-        if (baseFee > 0 || fixedNativeFee > 0) {
-            emit FeesPaid(msg.sender, feeCollector, fixedNativeFee, token, baseFee);
-        }
 
         tesseractIDNonce++;
-        bytes32 tesseractID = calculateTesseractID(tesseractIDNonce);
 
         CellPayload memory payload = CellPayload({
-            tesseractID: tesseractID,
+            tesseractID: calculateTesseractID(tesseractIDNonce),
             instructions: instructions,
             rollbackDestination: instructions.hops[0].bridgePath.bridgeSourceChain,
             sourceBlockchainID: blockchainID
         });
+
         _route(
             RouteParams({
                 token: token,
@@ -145,7 +143,17 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             })
         );
 
-        emit Initiated(tesseractID, instructions.sourceId, msg.sender, instructions.receiver, token, amount);
+        emit Initiated(
+            payload.tesseractID,
+            instructions.sourceId,
+            tx.origin,
+            msg.sender,
+            instructions.receiver,
+            token,
+            amount,
+            fixedNativeFee,
+            baseFee
+        );
     }
 
     function calculateFees(Instructions memory instructions, uint256 amount)
@@ -154,7 +162,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         returns (uint256 fixedNativeFee, uint256 baseFee)
     {
         if (instructions.hops[0].action != Action.Hop) {
-            return (fixedFee, amount * baseFeeBips / BIPS_DIVISOR);
+            return (fixedFee, Math.mulDiv(amount, baseFeeBips, BIPS_DIVISOR, Math.Rounding.Up));
         }
     }
 

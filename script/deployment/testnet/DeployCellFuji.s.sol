@@ -11,16 +11,14 @@ contract DeployCellFuji is TeleporterScriptBase {
     uint256 public constant MIN_TELEPORTER_VERSION = 1;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address owner = vm.envAddress("CELL_OWNER_TESTNET");
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
-        new YakSwapCell(
-            vm.addr(deployerPrivateKey), WAVAX_FUJI, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_ROUTER
-        );
+        new YakSwapCell(owner, WAVAX_FUJI, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, YAK_ROUTER);
 
         vm.stopBroadcast();
     }
 }
 
-// forge script --chain 43113 script/deployment/testnet/DeployCellFuji.s.sol:DeployCellFuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation -vvvv --optimize --optimizer-runs 200 --verify --verifier-url 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan' --etherscan-api-key "verifyContract"
+// forge script --chain 43113 script/deployment/testnet/DeployCellFuji.s.sol:DeployCellFuji --account deployer_fuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation -vvvv --optimize --optimizer-runs 200 --verify --verifier-url 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan' --etherscan-api-key "verifyContract"

@@ -150,27 +150,43 @@ interface ICell {
     /**
      * @notice Emitted when a new cross-chain operation is initiated
      * @dev Logs the start of a new operation for tracking
-     * @param sender Address initiating the operation (indexed)
-     * @param token Address of input token (indexed)
+     * @param tesseractId Unique identifier for the Tesseract operation (indexed)
+     * @param sourceId Unique identifier for the source frontend (indexed)
+     * @param origin Address initiating the operation (indexed)
+     * @param sender Msg.sender initiating the operation
+     * @param receiver Final receiver of the tokens
+     * @param token Address of input token
      * @param amount Number of tokens being processed
+     * @param nativeFeeAmount Amount of native fee
+     * @param baseFeeAmount Amount of base fee
      */
     event Initiated(
         bytes32 indexed tesseractId,
         uint256 indexed sourceId,
-        address indexed sender,
+        address indexed origin,
+        address sender,
         address receiver,
         address token,
-        uint256 amount
-    );
-
-    event FeesPaid(
-        address indexed sender,
-        address indexed collector,
+        uint256 amount,
         uint256 nativeFeeAmount,
-        address baseFeeToken,
         uint256 baseFeeAmount
     );
 
+    /**
+     * @notice Emitted when Cell contract routes tokens to destination
+     * @dev Logs all token movements for tracking and verification
+     * @param tesseractID Unique identifier for the Tesseract operation (indexed)
+     * @param messageID Unique identifier for the message (indexed)
+     * @param action Type of action performed
+     * @param transferrer Address of the token transferrer on source chain (indexed)
+     * @param destinationBlockchainID Destination blockchain identifier
+     * @param destinationCell Cell contract address on destination chain
+     * @param destinationTransferrer Address of the transferrer on destination chain
+     * @param tokenIn Address of the input token
+     * @param amountIn Number of input tokens
+     * @param tokenOut Address of the output token
+     * @param amountOut Number of output tokens
+     */
     event CellRouted(
         bytes32 indexed tesseractID,
         bytes32 indexed messageID,
