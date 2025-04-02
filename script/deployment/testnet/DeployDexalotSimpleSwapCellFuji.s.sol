@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import {TeleporterScriptBase} from "../../TeleporterScriptBase.sol";
 import {DexalotSimpleSwapCell} from "./../../../src/DexalotSimpleSwapCell.sol";
 
-// source .env && forge script script/deployment/testnet/DeployDexalotSimpleSwapCellFuji.s.sol:DeployDexalotSimpleSwapCellFuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation --verifier-url 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan' --etherscan-api-key "verifyContract" --verify
+// forge script script/deployment/testnet/DeployDexalotSimpleSwapCellFuji.s.sol:DeployDexalotSimpleSwapCellFuji --account deployer_fuji --rpc-url $FUJI_RPC_URL --broadcast --skip-simulation --verifier-url 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan' --etherscan-api-key "verifyContract" --verify
 
 contract DeployDexalotSimpleSwapCellFuji is TeleporterScriptBase {
     address constant MAINNET_RFQ = 0x1f06d7533890dBD67106Fee55FA9693D412e7551;
@@ -14,18 +14,12 @@ contract DeployDexalotSimpleSwapCellFuji is TeleporterScriptBase {
     uint256 public constant MIN_TELEPORTER_VERSION = 1;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployerAddress = vm.addr(deployerPrivateKey);
+        address owner = vm.envAddress("CELL_OWNER_TESTNET");
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         new DexalotSimpleSwapCell(
-            deployerAddress,
-            WRAPPED_NATIVE_TOKEN,
-            TELEPORTER_REGISTRY,
-            MIN_TELEPORTER_VERSION,
-            MAINNET_RFQ,
-            SWAP_GAS_ESTIMATE
+            owner, WRAPPED_NATIVE_TOKEN, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION, MAINNET_RFQ, SWAP_GAS_ESTIMATE
         );
 
         vm.stopBroadcast();
