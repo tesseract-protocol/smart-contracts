@@ -200,6 +200,12 @@ contract UniV2Cell is Cell {
         uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
 
         uint256[] memory amounts = _getAmountsOut(trade.path, amount);
+
+        if (amounts[amounts.length - 1] < trade.minAmountOut) {
+            emit CellSwapFailed(token, amount, tokenOut, trade.minAmountOut);
+            return (false, address(0), 0);
+        }
+
         for (uint256 i = 0; i < trade.path.length - 1; i++) {
             address currentToken = trade.path[i];
             address nextToken = trade.path[i + 1];

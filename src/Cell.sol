@@ -499,6 +499,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             requiredGasLimit: payload.instructions.rollbackGasLimit,
             multiHopFallback: address(0)
         });
+
+        bytes32 messageID =
+            ITeleporterMessenger(teleporterRegistry.getLatestTeleporter()).getNextMessageID(payload.sourceBlockchainID);
+
         if (rollbackNative) {
             wrappedNativeToken.withdraw(amount - payload.instructions.rollbackTeleporterFee);
             IERC20(token).forceApprove(rollbackBridge, payload.instructions.rollbackTeleporterFee);
@@ -509,7 +513,17 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             IERC20(token).forceApprove(rollbackBridge, amount);
             IERC20TokenTransferrer(rollbackBridge).send(input, amount - payload.instructions.rollbackTeleporterFee);
         }
-        emit Rollback(payload.instructions.receiver, token, amount - payload.instructions.rollbackTeleporterFee);
+        emit CellRollback(
+            payload.tesseractID,
+            messageID,
+            rollbackBridge,
+            payload.instructions.receiver,
+            payload.sourceBlockchainID,
+            payload.rollbackDestination,
+            token,
+            amount,
+            amount - payload.instructions.rollbackTeleporterFee
+        );
     }
 
     /**

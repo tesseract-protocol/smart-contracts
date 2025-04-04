@@ -138,6 +138,7 @@ contract DexalotSimpleSwapCell is Cell {
             } else {
                 IERC20(token).approve(address(mainnetRFQ), 0);
             }
+            emit CellSwapFailed(token, amount, tokenOut, order.makerAmount);
             return (false, address(0), 0);
         }
     }
