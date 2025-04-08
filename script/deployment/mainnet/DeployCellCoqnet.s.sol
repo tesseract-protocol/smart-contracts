@@ -22,7 +22,7 @@ contract DeployCellCoqnet is TeleporterScriptBase {
 
 // forge script script/deployment/mainnet/DeployCellCoqnet.s.sol:DeployCellCoqnet --account deployer --rpc-url $COQNET_RPC_URL --broadcast --skip-simulation -vvvv --verify --verifier-url 'https://api.routescan.io/v2/network/mainnet/evm/42069/etherscan' --etherscan-api-key "verifyContract"
 
-// forge verify-contract 0x3fCF1765aa2EfBd6916511000Fb11A2971804BFF "src/HopOnlyCell.sol:HopOnlyCell" \
+// forge verify-contract 0xa7f586470CD7b70F9b5893eEe85C0b5354541A99 "src/HopOnlyCell.sol:HopOnlyCell" \
 // --verifier-url 'https://api.routescan.io/v2/network/mainnet/evm/42069/etherscan' \
 // --etherscan-api-key "verifyContract" \
 // --num-of-optimizations 200 \

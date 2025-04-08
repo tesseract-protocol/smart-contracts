@@ -152,6 +152,7 @@ contract YakSwapCell is Cell {
             amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
             emit YakSwapCellSwap(tradeData.trade.adapters);
         } catch {
+            emit CellSwapFailed(token, amount, tokenOut, tradeData.trade.amountOut);
             IERC20(token).approve(address(router), 0);
         }
     }

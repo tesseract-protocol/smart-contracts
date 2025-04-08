@@ -204,11 +204,37 @@ interface ICell {
     /**
      * @notice Emitted when tokens are returned due to operation failure
      * @dev Logs rollback operations for tracking failed transactions
-     * @param receiver Address receiving returned tokens (indexed)
-     * @param token Address of returned token (indexed)
-     * @param amount Amount of tokens returned
+     * @param tesseractID Unique identifier for the Tesseract operation (indexed)
+     * @param messageID Unique identifier for the message (indexed)
+     * @param transferrer Address of the token transferrer on source chain (indexed)
+     * @param receiver Address of the receiver on source chain
+     * @param destinationBlockchainID Destination blockchain identifier
+     * @param destinationTransferrer Address of the transferrer on destination chain
+     * @param token Address of the input/output token
+     * @param amountIn Number of input tokens
+     * @param amountOut Number of output tokens (amountIn - rollbackTeleporterFee)
      */
-    event Rollback(address indexed receiver, address indexed token, uint256 amount);
+    event CellRollback(
+        bytes32 indexed tesseractID,
+        bytes32 indexed messageID,
+        address indexed transferrer,
+        address receiver,
+        bytes32 destinationBlockchainID,
+        address destinationTransferrer,
+        address token,
+        uint256 amountIn,
+        uint256 amountOut
+    );
+
+    /**
+     * @notice Emitted when a swap operation fails
+     * @dev Logs the details of a failed swap operation
+     * @param tokenIn Address of the input token
+     * @param amountIn Number of input tokens
+     * @param expectedTokenOut Expected address of the output token
+     * @param expectedAmountOut Expected number of output tokens
+     */
+    event CellSwapFailed(address tokenIn, uint256 amountIn, address expectedTokenOut, uint256 expectedAmountOut);
 
     /**
      * @notice Event emitted when tokens are recovered from the contract
