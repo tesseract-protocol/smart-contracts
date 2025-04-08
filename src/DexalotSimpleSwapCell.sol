@@ -105,7 +105,7 @@ contract DexalotSimpleSwapCell is Cell {
         if (block.timestamp > order.expiry) {
             return (false, address(0), 0);
         }
-        if (order.taker != address(this)) {
+        if (address(uint160(order.nonceAndMeta >> 96)) != address(this)) {
             return (false, address(0), 0);
         }
 
