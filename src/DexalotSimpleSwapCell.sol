@@ -142,4 +142,8 @@ contract DexalotSimpleSwapCell is Cell {
             return (false, address(0), 0);
         }
     }
+
+    receive() external payable override {
+        if (msg.sender != address(wrappedNativeToken) || msg.sender != address(mainnetRFQ)) revert InvalidSender();
+    }
 }

@@ -72,7 +72,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
      * @dev Fallback function to receive native tokens
      * @notice Only accepts native tokens from the wrapped native token contract
      */
-    receive() external payable {
+    receive() external payable virtual {
         if (msg.sender != address(wrappedNativeToken)) revert InvalidSender();
     }
 
