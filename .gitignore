@@ -17,6 +17,10 @@ broadcast/*
 broadcast/DeployCellCoqnet.s.sol/42069/*
 !broadcast/DeployCellCoqnet.s.sol/42069/run-latest.json
 
+!broadcast/DeployDexalotSimpleSwapCell.s.sol
+broadcast/DeployDexalotSimpleSwapCell.s.sol/43114/*
+!broadcast/DeployDexalotSimpleSwapCell.s.sol/43114/run-latest.json
+
 !broadcast/DeployCellCchain.s.sol
 broadcast/DeployCellCchain.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol/43114/run-latest.json
