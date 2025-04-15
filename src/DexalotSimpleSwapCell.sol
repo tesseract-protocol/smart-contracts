@@ -99,12 +99,6 @@ contract DexalotSimpleSwapCell is Cell {
         if (token != order.takerAsset && !(token == address(wrappedNativeToken) && order.takerAsset == address(0))) {
             return (false, address(0), 0);
         }
-        if (amount != order.takerAmount) {
-            return (false, address(0), 0);
-        }
-        if (block.timestamp > order.expiry) {
-            return (false, address(0), 0);
-        }
         if (address(uint160(order.nonceAndMeta >> 96)) != address(this)) {
             return (false, address(0), 0);
         }
@@ -144,6 +138,6 @@ contract DexalotSimpleSwapCell is Cell {
     }
 
     receive() external payable override {
-        if (msg.sender != address(wrappedNativeToken) || msg.sender != address(mainnetRFQ)) revert InvalidSender();
+        if (msg.sender != address(wrappedNativeToken) && msg.sender != address(mainnetRFQ)) revert InvalidSender();
     }
 }
