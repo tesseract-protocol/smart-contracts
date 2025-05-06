@@ -18,13 +18,13 @@ import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/inte
 import {TeleporterRegistryOwnableApp} from "@teleporter/registry/TeleporterRegistryOwnableApp.sol";
 import {ITeleporterMessenger} from "@teleporter/ITeleporterMessenger.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-
 /**
  * @title Cell
  * @dev Abstract contract for facilitating cross-chain token swaps and transfers
  * This contract implements the core functionality for cross-chain operations,
  * including token swaps, transfers, and multi-hop transactions.
  */
+
 abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, TeleporterRegistryOwnableApp {
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -492,7 +492,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         SendTokensInput memory input = SendTokensInput({
             destinationBlockchainID: payload.sourceBlockchainID,
             destinationTokenTransferrerAddress: payload.rollbackDestination,
-            recipient: payload.instructions.receiver,
+            recipient: payload.instructions.rollbackReceiver,
             primaryFeeTokenAddress: token,
             primaryFee: payload.instructions.rollbackTeleporterFee,
             secondaryFee: 0,
@@ -517,7 +517,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             payload.tesseractID,
             messageID,
             rollbackBridge,
-            payload.instructions.receiver,
+            payload.instructions.rollbackReceiver,
             payload.sourceBlockchainID,
             payload.rollbackDestination,
             token,

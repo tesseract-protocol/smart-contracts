@@ -29,6 +29,7 @@ struct Instructions {
     uint256 sourceId;
     address receiver;
     bool payableReceiver;
+    address rollbackReceiver;
     uint256 rollbackTeleporterFee;
     uint256 rollbackGasLimit;
     Hop[] hops;

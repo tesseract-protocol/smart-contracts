@@ -29,6 +29,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -70,6 +71,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -113,7 +115,8 @@ contract HopOnlyCellTest is BaseTest {
             receiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            rollbackReceiver: vm.addr(123)
         });
 
         CellPayload memory payload = CellPayload({
@@ -152,6 +155,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -193,6 +197,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -234,6 +239,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -275,6 +281,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -316,6 +323,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -357,6 +365,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -404,6 +413,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -441,6 +451,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -483,6 +494,7 @@ contract HopOnlyCellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1

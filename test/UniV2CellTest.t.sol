@@ -41,6 +41,7 @@ contract UniV2CellTest is BaseTest {
 
         Instructions memory instructions = Instructions({
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
@@ -95,6 +96,7 @@ contract UniV2CellTest is BaseTest {
         Instructions memory instructions = Instructions({
             receiver: vm.addr(123),
             payableReceiver: true,
+            rollbackReceiver: vm.addr(123),
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             hops: hops,
@@ -149,6 +151,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -202,6 +205,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -248,6 +252,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -294,6 +299,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -340,6 +346,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -386,6 +393,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -432,6 +440,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -478,6 +487,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -530,6 +540,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -583,6 +594,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
@@ -636,6 +648,7 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             receiver: vm.addr(123),
+            rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
             sourceId: 1
