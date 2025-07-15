@@ -10,6 +10,7 @@ optimizer-runs = 200
 [rpc_endpoints]
 fuji = "${FUJI_RPC_URL}"
 tes = "${TESCHAIN_RPC_URL}"
+kite_testnet = "${KITE_AI_TESTNET_RPC_URL}" # Chain ID: 2368
 
 [fmt]
 int_types = "long"
