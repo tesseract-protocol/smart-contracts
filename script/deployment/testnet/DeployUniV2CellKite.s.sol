@@ -3,7 +3,7 @@ pragma solidity 0.8.25;
 
 import "forge-std/Script.sol";
 import {TeleporterScriptBase} from "../../TeleporterScriptBase.sol";
-import "./../../../src/UniV2Cell.sol";
+import {UniV2Cell} from "./../../../src/UniV2Cell.sol";
 
 // source .env && forge script script/deployment/testnet/DeployUniV2CellKite.s.sol:DeployUniV2CellKite --account yak-deployer --rpc-url kite_testnet --skip-simulation -vvvv
 // source .env && forge script script/deployment/testnet/DeployUniV2CellKite.s.sol:DeployUniV2CellKite --account yak-deployer --rpc-url kite_testnet --broadcast --skip-simulation -vvvv
