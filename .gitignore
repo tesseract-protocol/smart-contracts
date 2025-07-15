@@ -24,4 +24,9 @@ broadcast/DeployDexalotSimpleSwapCell.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol
 broadcast/DeployCellCchain.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol/43114/run-latest.json
+
+!broadcast/DeployUniV2CellKite.s.sol
+broadcast/DeployUniV2CellKite.s.sol/2368/*
+!broadcast/DeployUniV2CellKite.s.sol/2368/run-latest.json
+
 /script/tests
