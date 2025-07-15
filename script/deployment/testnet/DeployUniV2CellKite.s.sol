@@ -40,7 +40,3 @@ contract DeployUniV2CellKite is TeleporterScriptBase {
         vm.stopBroadcast();
     }
 }
-
-// contract WarpMessengerMock {
-//     function getBlockchainID() external returns (bytes32 blockchainID) {}
-// }
