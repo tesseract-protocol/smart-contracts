@@ -106,6 +106,28 @@
             "internalType": "uint256"
           },
           {
+            "name": "thirdPartyFee",
+            "type": "tuple",
+            "internalType": "struct ThirdPartyFee",
+            "components": [
+              {
+                "name": "fixedFee",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "baseFeeBips",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "feeCollector",
+                "type": "address",
+                "internalType": "address"
+              }
+            ]
+          },
+          {
             "name": "receiver",
             "type": "address",
             "internalType": "address"
@@ -302,6 +324,28 @@
             "name": "sourceId",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "thirdPartyFee",
+            "type": "tuple",
+            "internalType": "struct ThirdPartyFee",
+            "components": [
+              {
+                "name": "fixedFee",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "baseFeeBips",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "feeCollector",
+                "type": "address",
+                "internalType": "address"
+              }
+            ]
           },
           {
             "name": "receiver",
@@ -1089,6 +1133,18 @@
       },
       {
         "name": "baseFeeAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "thirdPartyNativeFeeAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "thirdPartyBaseFeeAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

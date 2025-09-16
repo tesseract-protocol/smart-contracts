@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import "./BaseTest.t.sol";
 import "./../src/HopOnlyCell.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract HopOnlyCellTest is BaseTest {
     function test_ERC20_SwapAndTransfer() public {
@@ -32,7 +33,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -74,7 +76,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -116,7 +119,8 @@ contract HopOnlyCellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            rollbackReceiver: vm.addr(123)
+            rollbackReceiver: vm.addr(123),
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -158,7 +162,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -200,7 +205,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -242,7 +248,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -284,7 +291,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -326,7 +334,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -368,7 +377,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -416,7 +426,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         vm.deal(vm.addr(123123), 100e18);
@@ -454,7 +465,8 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
@@ -468,9 +480,12 @@ contract HopOnlyCellTest is BaseTest {
     function test_ERC20_InitiateWithFees() public {
         HopOnlyCell cell = new HopOnlyCell(vm.addr(1), WAVAX, TELEPORTER_REGISTRY, MIN_TELEPORTER_VERSION);
 
+        address feeCollector = vm.addr(345);
+
         vm.startPrank(vm.addr(1));
-        cell.updateFixedFee(1e18);
+        cell.updateFixedFee(2e17);
         cell.updateBaseFeeBips(100);
+        cell.updateFeeCollector(feeCollector);
         vm.stopPrank();
 
         Hop[] memory hops = new Hop[](1);
@@ -490,6 +505,8 @@ contract HopOnlyCellTest is BaseTest {
             })
         });
 
+        address thirdPartyFeeCollector = vm.addr(567);
+
         Instructions memory instructions = Instructions({
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
@@ -497,17 +514,20 @@ contract HopOnlyCellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({fixedFee: 1e17, baseFeeBips: 100, feeCollector: thirdPartyFeeCollector})
         });
 
         writeTokenBalance(vm.addr(123123), USDC, 1000e6);
-        vm.deal(vm.addr(123123), 1e18);
+        vm.deal(vm.addr(123123), 2e18);
         vm.startPrank(vm.addr(123123));
         ERC20(USDC).approve(address(cell), 1000e6);
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
         emit SendCrossChainMessage();
-        cell.initiate{value: 1 ether}(USDC, 1000e6, instructions);
-        vm.assertEq(address(vm.addr(1)).balance, 1e18);
-        vm.assertEq(ERC20(USDC).balanceOf(vm.addr(1)), 10e6);
+        cell.initiate{value: 0.3 ether}(USDC, 1000e6, instructions);
+        vm.assertEq(address(feeCollector).balance, 2e17);
+        vm.assertEq(address(thirdPartyFeeCollector).balance, 1e17);
+        vm.assertEq(ERC20(USDC).balanceOf(feeCollector), Math.mulDiv(1000e6, 100, 10_000, Math.Rounding.Up));
+        vm.assertEq(ERC20(USDC).balanceOf(thirdPartyFeeCollector), Math.mulDiv(1000e6, 100, 10_000, Math.Rounding.Up));
     }
 }

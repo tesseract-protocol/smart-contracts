@@ -18,13 +18,13 @@ import {IWarpMessenger} from "@avalabs/subnet-evm-contracts@1.2.0/contracts/inte
 import {TeleporterRegistryOwnableApp} from "@teleporter/registry/TeleporterRegistryOwnableApp.sol";
 import {ITeleporterMessenger} from "@teleporter/ITeleporterMessenger.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  * @title Cell
  * @dev Abstract contract for facilitating cross-chain token swaps and transfers
  * This contract implements the core functionality for cross-chain operations,
  * including token swaps, transfers, and multi-hop transactions.
  */
-
 abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallReceiver, TeleporterRegistryOwnableApp {
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -102,26 +102,35 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             revert InvalidInstructions();
         }
 
-        (uint256 fixedNativeFee, uint256 baseFee) = calculateFees(instructions, amount);
+        (uint256 protocolNativeFee, uint256 protocolBaseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee) =
+            _calculateFees(instructions, amount);
+        uint256 totalNativeFee = protocolNativeFee + thirdPartyNativeFee;
 
-        if (msg.value < fixedNativeFee) {
-            revert InsufficientFeeReceived(fixedNativeFee, msg.value);
+        if (msg.value < totalNativeFee) {
+            revert InsufficientFeeReceived(totalNativeFee, msg.value);
         }
 
-        if (msg.value - fixedNativeFee > 0) {
-            amount = msg.value - fixedNativeFee;
+        if (msg.value - totalNativeFee > 0) {
+            amount = msg.value - totalNativeFee;
             wrappedNativeToken.deposit{value: amount}();
             token = address(wrappedNativeToken);
         } else {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
 
-        if (baseFee > 0) {
-            IERC20(token).safeTransfer(feeCollector, baseFee);
-            amount -= baseFee;
+        if (protocolBaseFee > 0) {
+            IERC20(token).safeTransfer(feeCollector, protocolBaseFee);
+            amount -= protocolBaseFee;
         }
-        if (fixedNativeFee > 0) {
-            payable(feeCollector).sendValue(fixedNativeFee);
+        if (thirdPartyBaseFee > 0) {
+            IERC20(token).safeTransfer(instructions.thirdPartyFee.feeCollector, thirdPartyBaseFee);
+            amount -= thirdPartyBaseFee;
+        }
+        if (protocolNativeFee > 0) {
+            payable(feeCollector).sendValue(protocolNativeFee);
+        }
+        if (thirdPartyNativeFee > 0) {
+            payable(instructions.thirdPartyFee.feeCollector).sendValue(thirdPartyNativeFee);
         }
 
         tesseractIDNonce++;
@@ -151,8 +160,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             instructions.receiver,
             token,
             amount,
-            fixedNativeFee,
-            baseFee
+            protocolNativeFee,
+            protocolBaseFee,
+            thirdPartyNativeFee,
+            thirdPartyBaseFee
         );
     }
 
@@ -162,7 +173,24 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         returns (uint256 fixedNativeFee, uint256 baseFee)
     {
         if (instructions.hops[0].action != Action.Hop) {
-            return (fixedFee, Math.mulDiv(amount, baseFeeBips, BIPS_DIVISOR, Math.Rounding.Up));
+            (uint256 protocolNativeFee, uint256 protocolBaseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee)
+            = _calculateFees(instructions, amount);
+            return (protocolNativeFee + thirdPartyNativeFee, protocolBaseFee + thirdPartyBaseFee);
+        }
+    }
+
+    function _calculateFees(Instructions memory instructions, uint256 amount)
+        internal
+        view
+        returns (uint256 fixedNativeFee, uint256 baseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee)
+    {
+        if (instructions.hops[0].action != Action.Hop) {
+            return (
+                fixedFee,
+                Math.mulDiv(amount, baseFeeBips, BIPS_DIVISOR, Math.Rounding.Up),
+                instructions.thirdPartyFee.fixedFee,
+                Math.mulDiv(amount, instructions.thirdPartyFee.baseFeeBips, BIPS_DIVISOR, Math.Rounding.Up)
+            );
         }
     }
 
