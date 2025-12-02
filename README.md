@@ -1,6 +1,6 @@
 # Tesseract Protocol
 
-Tesseract Protocol facilitates fast, simple token swaps between Avalanche L1s (formerly known as subnets).
+Tesseract Protocol facilitates fast, simple token swaps between **Avalanche Subnets (L1s)**
 
 ## Target Features
 
@@ -22,10 +22,17 @@ Based on [Yak Swap](https://github.com/yieldyak/yak-aggregator), using onchain q
 - Similar to Yak Swap, clients should gather quotes by querying the RPCs, compare prices, generate a swap using the best quote and post the transaction.
 - Different to Yak Swap, clients should consider that swaps are nonatomic (settled over multiple blocks) and the best quote may pass through a sub-optimal route in case the swap fails and funds fall back to a chain where the user does not have gas.
 
-### Swap Failure Handling
 
-- Single-hop rollback: `sender` receives `tokenIn` on `sourceChain`
-- Multi-hop refund: `tokenIn` transferred to `receiver` on current chain (where the trade fails)
+### Swap Failure Handling & Risks
+
+**Warning:** Swaps on this protocol are **nonatomic** (they are not all-or-nothing). It is critical to understand the failure modes:
+
+* **Single-Hop Rollback:**
+    If a simple, direct swap fails, the transaction reverts. The **`sender`** receives their original **`tokenIn`** back on the **`sourceChain`**.
+
+* **Multi-Hop Failure (Fund Forwarding):**
+    If a swap fails mid-path (on an intermediate chain), the protocol **does not roll back**. Instead, the original **`tokenIn`** is forwarded to the **`receiver`**'s address on the **`chain where the trade failed`**.
+    * **Risk:** In this multi-hop failure scenario, the original **`sender` does not get their funds back**. The funds are sent to the intended recipient, but on a different chain and in the *original* token, not the *expected* token.
 
 ## Important Notes
 
