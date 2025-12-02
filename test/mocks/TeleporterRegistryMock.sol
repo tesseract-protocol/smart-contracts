@@ -10,6 +10,10 @@ contract TeleporterRegistryMock {
         teleporterMessenger = address(new TeleporterMock());
     }
 
+    function latestVersion() public pure returns (uint256) {
+        return 1;
+    }
+
     function getVersionFromAddress(address) public pure returns (uint256) {
         return 1;
     }

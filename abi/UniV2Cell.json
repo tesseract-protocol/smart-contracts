@@ -139,6 +139,11 @@
             "internalType": "struct ThirdPartyFee",
             "components": [
               {
+                "name": "exemptSingleHop",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
                 "name": "fixedFee",
                 "type": "uint256",
                 "internalType": "uint256"
@@ -403,6 +408,11 @@
             "type": "tuple",
             "internalType": "struct ThirdPartyFee",
             "components": [
+              {
+                "name": "exemptSingleHop",
+                "type": "bool",
+                "internalType": "bool"
+              },
               {
                 "name": "fixedFee",
                 "type": "uint256",

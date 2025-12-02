@@ -49,7 +49,7 @@ contract UniV2CellTest is BaseTest {
             rollbackGasLimit: 450_000,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -101,7 +101,7 @@ contract UniV2CellTest is BaseTest {
             rollbackGasLimit: 450_000,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -153,7 +153,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -205,7 +205,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -250,7 +250,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -295,7 +295,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -340,7 +340,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -385,7 +385,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -430,7 +430,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -475,7 +475,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
         CellPayload memory payload = CellPayload({
             tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
@@ -526,7 +526,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -578,7 +578,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
@@ -630,7 +630,7 @@ contract UniV2CellTest is BaseTest {
             payableReceiver: true,
             hops: hops,
             sourceId: 1,
-            thirdPartyFee: ThirdPartyFee({fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({

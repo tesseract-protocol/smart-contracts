@@ -166,15 +166,9 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         view
         returns (uint256 fixedNativeFee, uint256 baseFee)
     {
-        if (instructions.hops[0].action != Action.Hop) {
-            (
-                uint256 protocolNativeFee,
-                uint256 protocolBaseFee,
-                uint256 thirdPartyNativeFee,
-                uint256 thirdPartyBaseFee
-            ) = _calculateFees(instructions, amount);
-            return (protocolNativeFee + thirdPartyNativeFee, protocolBaseFee + thirdPartyBaseFee);
-        }
+        (uint256 protocolNativeFee, uint256 protocolBaseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee) =
+            _calculateFees(instructions, amount);
+        return (protocolNativeFee + thirdPartyNativeFee, protocolBaseFee + thirdPartyBaseFee);
     }
 
     function _calculateFees(Instructions memory instructions, uint256 amount)
@@ -182,7 +176,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         view
         returns (uint256 fixedNativeFee, uint256 baseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee)
     {
-        if (instructions.hops[0].action != Action.Hop) {
+        if (instructions.hops[0].action != Action.Hop || !instructions.thirdPartyFee.exemptSingleHop) {
             return (
                 fixedFee,
                 Math.mulDiv(amount, baseFeeBips, BIPS_DIVISOR, Math.Rounding.Up),

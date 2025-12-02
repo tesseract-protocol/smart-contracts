@@ -116,6 +116,7 @@ enum Action {
  * @param feeCollector The address of the fee collector for the third party
  */
 struct ThirdPartyFee {
+    bool exemptSingleHop;
     uint256 fixedFee;
     uint256 baseFeeBips;
     address feeCollector;
