@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./../../../src/HopOnlyCell.sol";
+import {HopOnlyCell} from "./../../../src/HopOnlyCell.sol";
 import {TeleporterScriptBase} from "../../TeleporterScriptBase.sol";
 
 contract DeployCellBlazeChain is TeleporterScriptBase {
@@ -20,4 +20,4 @@ contract DeployCellBlazeChain is TeleporterScriptBase {
     }
 }
 
-// forge script script/deployment/blaze/DeployCellBlazeChain.s.sol:DeployCellBlazeChain --account deployer --rpc-url https://subnets.avax.network/blaze/mainnet/rpc --broadcast --skip-simulation -vvvv --verifier custom --verify --verifier-url 'https://api.routescan.io/v2/network/mainnet/evm/46975/etherscan' --etherscan-api-key "verifyContract"
+// forge script script/deployment/mainnet/DeployCellBlazeChain.s.sol:DeployCellBlazeChain --account deployer --rpc-url https://subnets.avax.network/blaze/mainnet/rpc --broadcast --skip-simulation -vv

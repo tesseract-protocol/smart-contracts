@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "@teleporter/ITeleporterMessenger.sol";
-import "@teleporter/ITeleporterReceiver.sol";
-import "forge-std/console2.sol";
+import {TeleporterMessageInput} from "@teleporter/ITeleporterMessenger.sol";
+import {ITeleporterReceiver} from "@teleporter/ITeleporterReceiver.sol";
 
 contract TeleporterMock {
     event SendCrossChainMessage();

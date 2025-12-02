@@ -19,6 +19,7 @@ struct CellPayload {
  * @notice Detailed instructions for cross-chain operations
  * @dev Defines the complete path and parameters for token movement across chains
  * @param sourceId Unique identifier for the source frontend
+ * @param thirdPartyFee Third party fee structure
  * @param receiver Address that will receive the final tokens
  * @param payableReceiver Boolean indicating if receiver can/should receive native tokens
  * @param rollbackTeleporterFee Amount of input token for rollback operation fees
@@ -27,6 +28,7 @@ struct CellPayload {
  */
 struct Instructions {
     uint256 sourceId;
+    ThirdPartyFee thirdPartyFee;
     address receiver;
     bool payableReceiver;
     address rollbackReceiver;
@@ -107,6 +109,20 @@ enum Action {
 }
 
 /**
+ * @notice Represents the fee structure for a third party frontend
+ * @dev Contains the fixed fee and base fee for the frontend
+ * @param fixedFee The fixed fee amount
+ * @param baseFeeBips The base fee amount
+ * @param feeCollector The address of the fee collector for the third party
+ */
+struct ThirdPartyFee {
+    bool exemptSingleHop;
+    uint256 fixedFee;
+    uint256 baseFeeBips;
+    address feeCollector;
+}
+
+/**
  * @title ICell Interface
  * @notice Core interface for Cell protocol's cross-chain token operations
  * @dev Defines the essential contract interface for implementing cross-chain token swaps and transfers
@@ -160,6 +176,8 @@ interface ICell {
      * @param amount Number of tokens being processed
      * @param nativeFeeAmount Amount of native fee
      * @param baseFeeAmount Amount of base fee
+     * @param thirdPartyNativeFeeAmount Amount of third party native fee
+     * @param thirdPartyBaseFeeAmount Amount of third party base fee
      */
     event Initiated(
         bytes32 indexed tesseractId,
@@ -170,7 +188,9 @@ interface ICell {
         address token,
         uint256 amount,
         uint256 nativeFeeAmount,
-        uint256 baseFeeAmount
+        uint256 baseFeeAmount,
+        uint256 thirdPartyNativeFeeAmount,
+        uint256 thirdPartyBaseFeeAmount
     );
 
     /**

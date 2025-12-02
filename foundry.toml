@@ -15,4 +15,7 @@ tes = "${TESCHAIN_RPC_URL}"
 int_types = "long"
 line_length = 120
 
+[lint]
+exclude_lints = ["mixed-case-variable", "mixed-case-function", "screaming-snake-case-immutable", "asm-keccak256"]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
