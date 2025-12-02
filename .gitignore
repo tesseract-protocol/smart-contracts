@@ -11,6 +11,8 @@ docs/
 # MacOS
 .DS_Store
 
+/script/tests
+
 broadcast/*
 
 !broadcast/DeployCellCoqnet.s.sol
@@ -24,4 +26,7 @@ broadcast/DeployDexalotSimpleSwapCell.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol
 broadcast/DeployCellCchain.s.sol/43114/*
 !broadcast/DeployCellCchain.s.sol/43114/run-latest.json
-/script/tests
+
+!broadcast/DeployCellBlazeChain.s.sol
+broadcast/DeployCellBlazeChain.s.sol/46975/*
+!broadcast/DeployCellBlazeChain.s.sol/46975/run-latest.json
