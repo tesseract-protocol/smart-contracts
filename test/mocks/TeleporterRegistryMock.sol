@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./TeleporterMock.sol";
+import {TeleporterMock} from "./TeleporterMock.sol";
 
 contract TeleporterRegistryMock {
-    uint256 public constant latestVersion = 1;
-
     address immutable teleporterMessenger;
 
     constructor() {

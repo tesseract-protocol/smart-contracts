@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "forge-std/Test.sol";
-import "../src/interfaces/ICell.sol";
-import "@ictt/TokenHome/ERC20TokenHome.sol";
-import "@ictt/TokenHome/NativeTokenHome.sol";
-import "@ictt/interfaces/ITokenTransferrer.sol";
-import "@ictt/interfaces/IERC20TokenTransferrer.sol";
-import "@ictt/interfaces/INativeTokenTransferrer.sol";
-import "@ictt/WrappedNativeToken.sol";
-import "./mocks/TeleporterRegistryMock.sol";
-import "./mocks/WarpMessengerMock.sol";
-import "../src/DexalotSimpleSwapCell.sol";
+import {Test, stdStorage, StdStorage} from "forge-std/Test.sol";
+import {NativeTokenHome} from "@ictt/TokenHome/NativeTokenHome.sol";
+import {TransferrerMessage, SingleHopCallMessage} from "@ictt/interfaces/ITokenTransferrer.sol";
+import {TeleporterRegistryMock} from "./mocks/TeleporterRegistryMock.sol";
+import {WarpMessengerMock} from "./mocks/WarpMessengerMock.sol";
+import {DexalotSimpleSwapCell} from "../src/DexalotSimpleSwapCell.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract DexalotCellTest is Test {
     using stdStorage for StdStorage;
@@ -53,9 +49,8 @@ contract DexalotCellTest is Test {
 
         vm.etch(DEXALOT_SIMPLE_SWAP_CELL, address(dexalotSimpleSwapCell).code);
         vm.startPrank(TELEPORTER);
-        NativeTokenHome(AVAX_TOKEN_HOME).receiveTeleporterMessage(
-            COQ_BLOCKCHAIN_ID, 0x28aF629a9F3ECE3c8D9F0b7cCf6349708CeC8cFb, PAYLOAD_AVAX_USDC
-        );
+        NativeTokenHome(AVAX_TOKEN_HOME)
+            .receiveTeleporterMessage(COQ_BLOCKCHAIN_ID, 0x28aF629a9F3ECE3c8D9F0b7cCf6349708CeC8cFb, PAYLOAD_AVAX_USDC);
     }
 
     function test_Swap_USDC_AVAX() public {
@@ -73,13 +68,14 @@ contract DexalotCellTest is Test {
 
         deal(USDC, address(this), 100e6);
         ERC20(USDC).approve(DEXALOT_SIMPLE_SWAP_CELL, 100e6);
-        DexalotSimpleSwapCell(payable(DEXALOT_SIMPLE_SWAP_CELL)).receiveTokens(
-            COQ_BLOCKCHAIN_ID,
-            0x00396774d1E5b1C2B175B0F0562f921887678771,
-            address(this),
-            USDC,
-            100e6,
-            message.recipientPayload
-        );
+        DexalotSimpleSwapCell(payable(DEXALOT_SIMPLE_SWAP_CELL))
+            .receiveTokens(
+                COQ_BLOCKCHAIN_ID,
+                0x00396774d1E5b1C2B175B0F0562f921887678771,
+                address(this),
+                USDC,
+                100e6,
+                message.recipientPayload
+            );
     }
 }

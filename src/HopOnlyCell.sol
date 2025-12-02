@@ -2,7 +2,6 @@
 pragma solidity 0.8.25;
 
 import {Cell} from "./Cell.sol";
-import {CellPayload} from "./interfaces/ICell.sol";
 
 /**
  * @title HopOnlyCell

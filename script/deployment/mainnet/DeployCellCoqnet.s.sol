@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./../../../src/HopOnlyCell.sol";
+import {HopOnlyCell} from "./../../../src/HopOnlyCell.sol";
 import {TeleporterScriptBase} from "../../TeleporterScriptBase.sol";
 
 contract DeployCellCoqnet is TeleporterScriptBase {

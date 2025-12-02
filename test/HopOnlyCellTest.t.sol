@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./BaseTest.t.sol";
-import "./../src/HopOnlyCell.sol";
+import {BaseTest} from "./BaseTest.t.sol";
+import {HopOnlyCell} from "./../src/HopOnlyCell.sol";
+import {Hop, Action, BridgePath, Instructions, CellPayload, ThirdPartyFee} from "../src/interfaces/ICell.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract HopOnlyCellTest is BaseTest {
     function test_ERC20_SwapAndTransfer() public {
@@ -38,10 +40,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), 1000e6, payload);
@@ -81,10 +80,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveNative(address(cell), 100e18, payload);
@@ -124,10 +120,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -167,10 +160,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -210,10 +200,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -253,10 +240,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -296,10 +280,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -339,10 +320,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -382,10 +360,7 @@ contract HopOnlyCellTest is BaseTest {
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         writeTokenBalance(address(cell), WAVAX, 100e18);

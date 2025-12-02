@@ -2,7 +2,6 @@
 pragma solidity 0.8.25;
 
 import {Cell} from "./Cell.sol";
-import {CellPayload} from "./interfaces/ICell.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IYakRouter, FormattedOffer, Trade} from "./interfaces/IYakRouter.sol";
@@ -106,7 +105,8 @@ contract YakSwapCell is Cell {
         TradeData memory tradeData = TradeData({
             trade: Trade({
                 amountIn: offer.amounts[0],
-                amountOut: (offer.amounts[offer.amounts.length - 1] * (BIPS_DIVISOR - extras.slippageBips)) / BIPS_DIVISOR,
+                amountOut: (offer.amounts[offer.amounts.length - 1] * (BIPS_DIVISOR - extras.slippageBips))
+                    / BIPS_DIVISOR,
                 path: offer.path,
                 adapters: offer.adapters
             }),

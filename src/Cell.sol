@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import {ICell, CellPayload, Instructions, Hop, BridgePath, Action} from "./interfaces/ICell.sol";
+import {ICell, CellPayload, Instructions, Hop, Action} from "./interfaces/ICell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20TokenTransferrer} from "@ictt/interfaces/IERC20TokenTransferrer.sol";
 import {IERC20SendAndCallReceiver} from "@ictt/interfaces/IERC20SendAndCallReceiver.sol";
 import {SendAndCallInput, SendTokensInput} from "@ictt/interfaces/ITokenTransferrer.sol";
@@ -144,11 +142,7 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
 
         _route(
             RouteParams({
-                token: token,
-                amount: amount,
-                payload: payload,
-                rollbackBridge: address(0),
-                rollbackNative: false
+                token: token, amount: amount, payload: payload, rollbackBridge: address(0), rollbackNative: false
             })
         );
 
@@ -173,8 +167,12 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         returns (uint256 fixedNativeFee, uint256 baseFee)
     {
         if (instructions.hops[0].action != Action.Hop) {
-            (uint256 protocolNativeFee, uint256 protocolBaseFee, uint256 thirdPartyNativeFee, uint256 thirdPartyBaseFee)
-            = _calculateFees(instructions, amount);
+            (
+                uint256 protocolNativeFee,
+                uint256 protocolBaseFee,
+                uint256 thirdPartyNativeFee,
+                uint256 thirdPartyBaseFee
+            ) = _calculateFees(instructions, amount);
             return (protocolNativeFee + thirdPartyNativeFee, protocolBaseFee + thirdPartyBaseFee);
         }
     }
@@ -261,10 +259,10 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
         bytes calldata payload
     ) internal {
         CellPayload memory cellPayload = abi.decode(payload, (CellPayload));
-        address rollbackBridge = (
-            sourceBlockchainID == cellPayload.sourceBlockchainID
-                && originTokenTransferrerAddress == cellPayload.rollbackDestination
-        ) ? msg.sender : address(0);
+        address rollbackBridge = (sourceBlockchainID == cellPayload.sourceBlockchainID
+                && originTokenTransferrerAddress == cellPayload.rollbackDestination)
+            ? msg.sender
+            : address(0);
         _route(
             RouteParams({
                 token: token,
@@ -427,21 +425,20 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             secondaryFee: isMultiHop ? hop.bridgePath.secondaryTeleporterFee : 0
         });
 
-        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter()).getNextMessageID(
-            hop.bridgePath.destinationBlockchainID
-        );
+        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter())
+            .getNextMessageID(hop.bridgePath.destinationBlockchainID);
 
         if (hop.bridgePath.sourceBridgeIsNative) {
             wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
-            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall{
-                value: amount - hop.bridgePath.teleporterFee
-            }(input);
+            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain)
+            .sendAndCall{value: amount - hop.bridgePath.teleporterFee}(
+                input
+            );
         } else {
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, amount);
-            IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain).sendAndCall(
-                input, amount - hop.bridgePath.teleporterFee
-            );
+            IERC20TokenTransferrer(hop.bridgePath.bridgeSourceChain)
+                .sendAndCall(input, amount - hop.bridgePath.teleporterFee);
         }
     }
 
@@ -481,14 +478,14 @@ abstract contract Cell is ICell, IERC20SendAndCallReceiver, INativeSendAndCallRe
             multiHopFallback: isMultiHop ? payload.instructions.receiver : address(0)
         });
 
-        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter()).getNextMessageID(
-            hop.bridgePath.destinationBlockchainID
-        );
+        messageID = ITeleporterMessenger(teleporterRegistry.getLatestTeleporter())
+            .getNextMessageID(hop.bridgePath.destinationBlockchainID);
 
         if (hop.bridgePath.sourceBridgeIsNative) {
             wrappedNativeToken.withdraw(amount - hop.bridgePath.teleporterFee);
             IERC20(token).forceApprove(hop.bridgePath.bridgeSourceChain, hop.bridgePath.teleporterFee);
-            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain).send{value: amount - hop.bridgePath.teleporterFee}(
+            INativeTokenTransferrer(hop.bridgePath.bridgeSourceChain)
+            .send{value: amount - hop.bridgePath.teleporterFee}(
                 input
             );
         } else {
