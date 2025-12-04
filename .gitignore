@@ -30,3 +30,7 @@ broadcast/DeployCellCchain.s.sol/43114/*
 !broadcast/DeployCellBlazeChain.s.sol
 broadcast/DeployCellBlazeChain.s.sol/46975/*
 !broadcast/DeployCellBlazeChain.s.sol/46975/run-latest.json
+
+!broadcast/DeployCellOrange.s.sol
+broadcast/DeployCellOrange.s.sol/1510/*
+!broadcast/DeployCellOrange.s.sol/1510/run-latest.json
