@@ -34,3 +34,8 @@ broadcast/DeployCellBlazeChain.s.sol/46975/*
 !broadcast/DeployCellOrange.s.sol
 broadcast/DeployCellOrange.s.sol/1510/*
 !broadcast/DeployCellOrange.s.sol/1510/run-latest.json
+
+!broadcast/DeployCellGrotto.s.sol
+broadcast/DeployCellGrotto.s.sol/28066/*
+broadcast/DeployCellGrotto.s.sol/36463/*
+!broadcast/DeployCellGrotto.s.sol/36463/run-latest.json
