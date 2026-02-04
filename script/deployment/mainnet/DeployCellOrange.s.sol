@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./../../../src/HopOnlyCell.sol";
+import {HopOnlyCell} from "./../../../src/HopOnlyCell.sol";
 import {TeleporterScriptBase} from "../../TeleporterScriptBase.sol";
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 contract DeployCellOrange is TeleporterScriptBase {
     address public constant JUICE = 0x07fE5886dc5397F3d2b0406B1b1de071b5463870;
