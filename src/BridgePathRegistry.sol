@@ -42,9 +42,19 @@ contract BridgePathRegistry is Ownable {
             }
         }
         if (index < type(uint256).max) {
-            bridgePaths[token][index] = BridgePath(localAddress, remoteAddress, destinationBlockchainID);
+            bridgePaths[token][index] = BridgePath({
+                localAddress: localAddress,
+                remoteAddress: remoteAddress,
+                destinationBlockchainID: destinationBlockchainID
+            });
         } else {
-            bridgePaths[token].push(BridgePath(localAddress, remoteAddress, destinationBlockchainID));
+            bridgePaths[token].push(
+                BridgePath({
+                    localAddress: localAddress,
+                    remoteAddress: remoteAddress,
+                    destinationBlockchainID: destinationBlockchainID
+                })
+            );
         }
 
         emit SetBridgePath(token, localAddress, remoteAddress, destinationBlockchainID);

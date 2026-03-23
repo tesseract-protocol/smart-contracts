@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "./BaseTest.t.sol";
-import "./../src/UniV2Cell.sol";
+import {BaseTest} from "./BaseTest.t.sol";
+import {UniV2Cell} from "./../src/UniV2Cell.sol";
+import {Hop, Action, BridgePath, Instructions, CellPayload, ThirdPartyFee} from "../src/interfaces/ICell.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract UniV2CellTest is BaseTest {
     address public UNIV2_FACTORY = 0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10;
@@ -46,14 +48,12 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveTokens(address(cell), address(wavaxTokenHome), amountIn, payload);
@@ -100,14 +100,12 @@ contract UniV2CellTest is BaseTest {
             rollbackTeleporterFee: 0,
             rollbackGasLimit: 450_000,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), amountIn, payload);
@@ -154,14 +152,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveNative(address(cell), amountIn, payload);
@@ -208,14 +204,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         mockReceiveTokens(address(cell), address(usdcTokenHome), amountIn, payload);
@@ -255,14 +249,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -302,14 +294,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -349,14 +339,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -396,14 +384,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -443,14 +429,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -490,13 +474,11 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -543,14 +525,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -597,14 +577,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());
@@ -651,14 +629,12 @@ contract UniV2CellTest is BaseTest {
             rollbackReceiver: vm.addr(123),
             payableReceiver: true,
             hops: hops,
-            sourceId: 1
+            sourceId: 1,
+            thirdPartyFee: ThirdPartyFee({exemptSingleHop: true, fixedFee: 0, baseFeeBips: 0, feeCollector: address(0)})
         });
 
         CellPayload memory payload = CellPayload({
-            tesseractID: "",
-            instructions: instructions,
-            sourceBlockchainID: "",
-            rollbackDestination: address(0)
+            tesseractID: "", instructions: instructions, sourceBlockchainID: "", rollbackDestination: address(0)
         });
 
         vm.expectEmit(teleporterRegistry.getLatestTeleporter());

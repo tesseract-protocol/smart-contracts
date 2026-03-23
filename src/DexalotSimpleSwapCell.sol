@@ -5,7 +5,6 @@ import {Cell} from "./Cell.sol";
 import {IDexalotMainnetRFQ} from "./interfaces/IDexalotMainnetRFQ.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IWrappedNativeToken} from "@ictt/interfaces/IWrappedNativeToken.sol";
 
 /**
  * @title DexalotSimpleSwapCell

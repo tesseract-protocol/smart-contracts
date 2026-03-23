@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
-import "forge-std/Test.sol";
-import "../src/interfaces/ICell.sol";
-import "@ictt/TokenHome/ERC20TokenHome.sol";
-import "@ictt/TokenHome/NativeTokenHome.sol";
-import "@ictt/interfaces/ITokenTransferrer.sol";
-import "@ictt/interfaces/IERC20TokenTransferrer.sol";
-import "@ictt/interfaces/INativeTokenTransferrer.sol";
-import "@ictt/WrappedNativeToken.sol";
-import "./mocks/TeleporterRegistryMock.sol";
-import "./mocks/WarpMessengerMock.sol";
+import {Test, stdStorage, StdStorage} from "forge-std/Test.sol";
+import {CellPayload} from "../src/interfaces/ICell.sol";
+import {ERC20TokenHome} from "@ictt/TokenHome/ERC20TokenHome.sol";
+import {NativeTokenHome} from "@ictt/TokenHome/NativeTokenHome.sol";
+import {
+    TransferrerMessage,
+    TransferrerMessageType,
+    SingleHopCallMessage,
+    SendTokensInput,
+    RegisterRemoteMessage
+} from "@ictt/interfaces/ITokenTransferrer.sol";
+import {IERC20TokenTransferrer} from "@ictt/interfaces/IERC20TokenTransferrer.sol";
+import {INativeTokenTransferrer} from "@ictt/interfaces/INativeTokenTransferrer.sol";
+import {WrappedNativeToken} from "@ictt/WrappedNativeToken.sol";
+import {TeleporterRegistryMock} from "./mocks/TeleporterRegistryMock.sol";
+import {TeleporterMock} from "./mocks/TeleporterMock.sol";
+import {WarpMessengerMock} from "./mocks/WarpMessengerMock.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 abstract contract BaseTest is Test {
     using stdStorage for StdStorage;
@@ -67,9 +75,8 @@ abstract contract BaseTest is Test {
                 })
             )
         });
-        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
-            bridge, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
-        );
+        TeleporterMock(teleporterRegistry.getLatestTeleporter())
+            .sendTeleporterMessage(bridge, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message));
     }
 
     function mockReceiveNative(address cell, uint256 amount, CellPayload memory payload) internal {
@@ -88,9 +95,10 @@ abstract contract BaseTest is Test {
                 })
             )
         });
-        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
-            address(nativeTokenHome), REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
-        );
+        TeleporterMock(teleporterRegistry.getLatestTeleporter())
+            .sendTeleporterMessage(
+                address(nativeTokenHome), REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(message)
+            );
     }
 
     function fundNativeBridge(address tokenHome, uint8 decimals) internal {
@@ -98,15 +106,12 @@ abstract contract BaseTest is Test {
             messageType: TransferrerMessageType.REGISTER_REMOTE,
             payload: abi.encode(
                 RegisterRemoteMessage({
-                    initialReserveImbalance: 0,
-                    homeTokenDecimals: decimals,
-                    remoteTokenDecimals: decimals
+                    initialReserveImbalance: 0, homeTokenDecimals: decimals, remoteTokenDecimals: decimals
                 })
             )
         });
-        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
-            tokenHome, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(registerMessage)
-        );
+        TeleporterMock(teleporterRegistry.getLatestTeleporter())
+            .sendTeleporterMessage(tokenHome, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(registerMessage));
 
         SendTokensInput memory input = SendTokensInput({
             destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
@@ -126,15 +131,12 @@ abstract contract BaseTest is Test {
             messageType: TransferrerMessageType.REGISTER_REMOTE,
             payload: abi.encode(
                 RegisterRemoteMessage({
-                    initialReserveImbalance: 0,
-                    homeTokenDecimals: decimals,
-                    remoteTokenDecimals: decimals
+                    initialReserveImbalance: 0, homeTokenDecimals: decimals, remoteTokenDecimals: decimals
                 })
             )
         });
-        TeleporterMock(teleporterRegistry.getLatestTeleporter()).sendTeleporterMessage(
-            tokenHome, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(registerMessage)
-        );
+        TeleporterMock(teleporterRegistry.getLatestTeleporter())
+            .sendTeleporterMessage(tokenHome, REMOTE_BLOCKCHAIN_ID, randomRemoteAddress, abi.encode(registerMessage));
 
         SendTokensInput memory input = SendTokensInput({
             destinationBlockchainID: REMOTE_BLOCKCHAIN_ID,
